@@ -1,54 +1,81 @@
+# --------------------------------------------------------------
+# Tarea Práctica: Programación Orientada a Objetos (POO)
+# Tema: Cálculo del promedio semanal del clima
+#
+# En este código se aplican los principios de POO:
+#  - Clases (ClimaDia y ClimaSemana)
+#  - Encapsulamiento (atributo privado __temperatura)
+#  - Herencia (ClimaSemanaExtendida)
+#  - Polimorfismo (sobrescritura del método promedio_semanal)
+# --------------------------------------------------------------
+
+
 # Clase que representa un día con su temperatura
 class ClimaDia:
     def __init__(self, dia, temperatura):
         self.dia = dia
-        self.__temperatura = temperatura  # Encapsulamiento
+        self.__temperatura = temperatura  # Atributo encapsulado
 
     # Getter de la temperatura
     def obtener_temperatura(self):
+        """
+        Retorna la temperatura almacenada.
+        """
         return self.__temperatura
 
     # Setter de la temperatura
     def asignar_temperatura(self, nueva_temp):
+        """
+        Permite modificar la temperatura del día.
+        """
         self.__temperatura = nueva_temp
 
 
-# Clase que representa la semana completa
+# Clase que representa una semana completa
 class ClimaSemana:
     def __init__(self):
-        self.dias = []
+        self.dias = []   # Lista de objetos ClimaDia
 
-    # Mtodo para ingresar las temperaturas de la semana
     def ingresar_datos(self):
-        nombres_dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+        """
+        Solicita las temperaturas de los 7 días y crea objetos ClimaDia.
+        """
+        nombres_dias = ["Lunes", "Martes", "Miércoles", "Jueves",
+                        "Viernes", "Sábado", "Domingo"]
 
         for dia in nombres_dias:
             temp = float(input(f"Temperatura del {dia}: "))
-            clima_dia = ClimaDia(dia, temp)
-            self.dias.append(clima_dia)
+            self.dias.append(ClimaDia(dia, temp))
 
-    # Metodos para calcular el promedio
     def promedio_semanal(self):
+        """
+        Calcula el promedio tomando la temperatura de cada objeto ClimaDia.
+        """
         total = sum(d.obtener_temperatura() for d in self.dias)
         return total / len(self.dias)
 
 
-# Ejemplo de Herencia (opcional)
+# Clase extendida para demostrar herencia y polimorfismo
 class ClimaSemanaExtendida(ClimaSemana):
-    # Polimorfismo: redefinimos el metodo para incluir un mensaje adicional
+
     def promedio_semanal(self):
-        promedio = super().promedio_semanal()
+        """
+        Redefinimos el método para añadir un mensaje extra.
+        (Ejemplo de polimorfismo)
+        """
         print("Cálculo realizado con ClimaSemanaExtendida.")
-        return promedio
+        return super().promedio_semanal()
 
 
-# Programa principal
+# Programa principal con POO
 def main():
-    clima = ClimaSemanaExtendida()
+    clima = ClimaSemanaExtendida()  # Uso de herencia
     clima.ingresar_datos()
     promedio = clima.promedio_semanal()
 
     print(f"\nEl promedio semanal es: {promedio:.2f}°C")
 
 
+# Ejecución del programa
 main()
+
