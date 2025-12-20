@@ -1,4 +1,10 @@
 # Sistema de Préstamo de Biblioteca (POO)
+## Datos del estudiante
+
+#### Nombre: Christian Iván Estupiñán Quintero
+#### Asignatura: Programación Orientada a Objetos
+#### Curso: 2do Ingeniería en Tecnologías de la Información "A"
+#### PAO: 2025-2026
 
 ## 📌 Descripción del Proyecto
 Este proyecto implementa un **sistema básico de préstamo de libros** utilizando
