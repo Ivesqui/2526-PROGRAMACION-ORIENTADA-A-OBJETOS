@@ -19,13 +19,14 @@ Aplicar los principios fundamentales de la Programación Orientada a Objetos med
 ---
 ## 🗂️ Estructura del Proyecto
 
-/SistemaBiblioteca
-│
-├── main.py # Programa principal
-├── libro.py # Clase Libro
-├── usuario.py # Clase Usuario
-├── biblioteca.py # Clase Biblioteca
-└── README.md # Documentación del sistema
+```bash
+SistemaBiblioteca/
+├── main.py          # Programa principal
+├── libro.py         # Clase Libro
+├── usuario.py       # Clase Usuario
+├── biblioteca.py    # Clase Biblioteca
+└── README.md        # Documentación del sistema
+```
 
 ## ⚙️ Funcionalidades del Sistema
 
