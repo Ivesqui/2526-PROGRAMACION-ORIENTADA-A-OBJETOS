@@ -33,11 +33,13 @@ Ejecutar el archivo `main.py` desde PyCharm o Visual Studio Code.
 
 ## 🗂️ Estructura del Proyecto
 ```
-conversion_unidades/
+conversor_unidades/
 ├── main.py
 ├── modelos/
-│ └── conversion.py
+│   └── conversion.py
 ├── servicios/
-│ └── servicio_conversion.py
+│   ├── servicio_longitud.py
+│   ├── servicio_peso.py
+│   └── servicio_temperatura.py
 └── README.md
 ```
