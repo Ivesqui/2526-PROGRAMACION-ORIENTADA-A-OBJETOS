@@ -43,6 +43,9 @@ def menu_temperatura():
     print("4. Kelvin → Celsius")
     print("5. Volver")
 
+''' Esta función incluye un menú con las diferentes opciones a escoger para 
+la conversión de unidades de medida: Longitud, peso, temperatura.
+'''
 
 def ejecutar_programa():
     programa_activo = True  # boolean

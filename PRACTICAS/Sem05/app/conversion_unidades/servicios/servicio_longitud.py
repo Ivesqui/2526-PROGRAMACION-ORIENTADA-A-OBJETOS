@@ -1,5 +1,5 @@
 """
-Servicio de conversión de longitud.
+Servicio de conversión de longitud (m a km, m a cm, km a m, cm a m).
 """
 
 def m_a_km(valor):

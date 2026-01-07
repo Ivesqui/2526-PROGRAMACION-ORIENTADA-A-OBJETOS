@@ -1,5 +1,6 @@
 """
-Servicio de conversión de temperatura.
+Servicio de conversión de temperatura (celsius a fahrenheit,
+fahrenheit a celsius, celsius a kelvin y kelvin a celsius.
 """
 
 def c_a_f(valor):

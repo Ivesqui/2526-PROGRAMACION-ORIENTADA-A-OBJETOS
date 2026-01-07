@@ -1,5 +1,6 @@
 """
 Servicio de conversión de peso.
+Kilogramos a gramos, kilogramos a libras, gramos a kilogramos, liras a kilogramos.
 """
 
 def kg_a_g(valor):
