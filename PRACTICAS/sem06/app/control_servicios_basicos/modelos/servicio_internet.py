@@ -8,7 +8,7 @@ class ServicioInternet(Servicio):
     """
 
     TARIFA_BASE = 24.00
-    IVA = 0.12
+    IVA = 0.15
 
     def __init__(self, codigo, mes, fecha_pago):
         # Consumo = 0 porque no aplica
