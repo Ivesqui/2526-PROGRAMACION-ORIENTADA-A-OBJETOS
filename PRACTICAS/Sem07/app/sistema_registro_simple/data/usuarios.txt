@@ -1,0 +1,4 @@
+Usuario creado: Christian - ci.estupinanq@uea.edu.ec
+Usuario eliminado: Christian
+Usuario creado: Ana - ana.ejemplo@uea.edu.ec
+Usuario eliminado: Ana
