@@ -1,11 +1,12 @@
 # PROGRAMACION-ORIENTADA-A-OBJETOS
 Este repositorio contiene el código fuente desarrollado durante la asignatura **Programación Orientada a Objetos**, impartida en la **Universidad Estatal Amazónica**. Está diseñado como un recurso de apoyo para estudiantes y profesionales interesados en conceptos y prácticas de programación orientada a objetos.
 
-## Información de la asignatura
+# Universidad Estatal Amazónica
 
-- **Institución**: Universidad Estatal Amazónica (UEA)  
-- **Carrera**: Ingeniería en Tecnologías de la Información  
-- **Asignatura**: Programación Orientada a Objetos  
+- Carrera: Tecnologías de la Información
+- Asignatura: Programación Orientada a Objetos
+- Curso: 2do A
+- Estudiante: Christian Iván Estupiñán Quintero
 
 ## Contenido del repositorio
 
@@ -38,4 +39,26 @@ Este repositorio incluye:
 4. Subir el proyecto a tu repositorio personal
    ```bash
    git push -u origin main
+
+## 🗂️ Estructura del Proyecto
+
+---
+```
+Sem08/
+├── dashboard_app/
+│ ├── data/
+│ │ └── file_system.py
+│ ├── modelos/
+│ │ └── unidad.py
+│ ├── servicios/
+│ │ ├── gestor_unidades.py
+│ │ └── gestor_scripts.py
+│ ├── ui/
+│ │ └── menus.py
+│ ├── __init__.py
+│ └── dashboard.py
+├── UNIDAD 1/
+├── UNIDAD 2/
+├── UNIDAD 3/
+└── README.md
 
