@@ -1,4 +1,4 @@
-from dashboard_app.data.file_system import listar_elementos
+from dashboard_app.data.sistema_archivos import listar_elementos
 import os
 
 def obtener_scripts(ruta):
