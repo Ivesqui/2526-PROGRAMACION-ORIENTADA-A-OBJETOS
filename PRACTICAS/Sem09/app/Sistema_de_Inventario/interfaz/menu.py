@@ -1,6 +1,7 @@
 from modelos.producto import Producto
 from servicios.inventario import Inventario
 
+
 def mostrar_menu():
     print("""
 ===== SISTEMA DE GESTIÓN DE INVENTARIOS =====
@@ -12,6 +13,7 @@ def mostrar_menu():
 6. Salir
 """)
 
+
 def ejecutar_menu():
     inventario = Inventario()
 
@@ -19,40 +21,47 @@ def ejecutar_menu():
         mostrar_menu()
         opcion = input("Seleccione una opción: ")
 
+        # AÑADIR PRODUCTO
         if opcion == "1":
-            idp = int(input("ID: "))
+            sku = input("SKU: ")
             nombre = input("Nombre: ")
             cantidad = int(input("Cantidad: "))
             precio = float(input("Precio: "))
 
-            producto = Producto(idp, nombre, cantidad, precio)
+            producto = Producto(sku, nombre, cantidad, precio)
             inventario.agregar_producto(producto)
 
+        # ELIMINAR PRODUCTO POR SKU
         elif opcion == "2":
-            idp = int(input("ID del producto: "))
-            inventario.eliminar_producto(idp)
+            sku = input("SKU del producto a eliminar: ")
+            inventario.eliminar_producto(sku)
 
+        # ACTUALIZAR PRODUCTO POR SKU
         elif opcion == "3":
-            idp = int(input("ID del producto: "))
+            sku = input("SKU del producto a actualizar: ")
             cantidad = input("Nueva cantidad (Enter para omitir): ")
             precio = input("Nuevo precio (Enter para omitir): ")
 
             inventario.actualizar_producto(
-                idp,
+                sku,
                 int(cantidad) if cantidad else None,
                 float(precio) if precio else None
             )
 
+        # BUSCAR PRODUCTO (por nombre o SKU)
         elif opcion == "4":
-            nombre = input("Nombre a buscar: ")
-            inventario.buscar_producto(nombre)
+            texto = input("Ingrese nombre o SKU a buscar: ")
+            inventario.buscar_producto(texto)
 
+        # LISTAR INVENTARIO
         elif opcion == "5":
             inventario.listar_productos()
 
+        # SALIR
         elif opcion == "6":
-            print("👋 Saliendo del sistema...")
+            print("Saliendo del sistema...")
             break
 
         else:
-            print("❌ Opción inválida, intente nuevamente")
+            print("Opción inválida, intente nuevamente")
+
