@@ -9,7 +9,8 @@ def crear_tabla():
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS productos (
-            id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sku TEXT UNIQUE NOT NULL,
             nombre TEXT NOT NULL,
             cantidad INTEGER NOT NULL,
             precio REAL NOT NULL
