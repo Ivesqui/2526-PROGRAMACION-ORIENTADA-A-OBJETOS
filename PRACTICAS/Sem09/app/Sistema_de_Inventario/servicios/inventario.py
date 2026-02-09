@@ -8,22 +8,26 @@ class Inventario:
 
         try:
             cursor.execute(
-                "INSERT INTO productos VALUES (?, ?, ?, ?)",
-                (producto.get_id(), producto.get_nombre(),
-                 producto.get_cantidad(), producto.get_precio())
+                "INSERT INTO productos (sku, nombre, cantidad, precio) VALUES (?, ?, ?, ?)",
+                (
+                    producto.get_sku(),
+                    producto.get_nombre(),
+                    producto.get_cantidad(),
+                    producto.get_precio()
+                )
             )
             conn.commit()
-            print("✅ Producto agregado correctamente")
+            print("Producto agregado correctamente")
         except:
-            print("❌ Error: ID duplicado")
+            print("Error: SKU duplicado")
         finally:
             conn.close()
 
-    def eliminar_producto(self, id_producto):
+    def eliminar_producto(self, sku):
         conn = conectar()
         cursor = conn.cursor()
 
-        cursor.execute("DELETE FROM productos WHERE id = ?", (id_producto,))
+        cursor.execute("DELETE FROM productos WHERE sku = ?", (sku,))
         conn.commit()
 
         if cursor.rowcount == 0:
@@ -33,23 +37,30 @@ class Inventario:
 
         conn.close()
 
-    def actualizar_producto(self, id_producto, cantidad=None, precio=None):
+    def actualizar_producto(self, sku, cantidad=None, precio=None):
         conn = conectar()
         cursor = conn.cursor()
 
         if cantidad is not None:
             cursor.execute(
-                "UPDATE productos SET cantidad = ? WHERE id = ?",
-                (cantidad, id_producto)
+                "UPDATE productos SET cantidad = ? WHERE sku = ?",
+                (cantidad, sku)
             )
 
         if precio is not None:
             cursor.execute(
-                "UPDATE productos SET precio = ? WHERE id = ?",
-                (precio, id_producto)
+                "UPDATE productos SET precio = ? WHERE sku = ?",
+                (precio, sku)
             )
 
         conn.commit()
+
+        if cursor.rowcount == 0:
+            print("Producto no encontrado...")
+        else:
+            print("Producto actualizado...")
+
+        conn.close()
 
         if cursor.rowcount == 0:
             print("Producto no encontrado")
@@ -58,14 +69,15 @@ class Inventario:
 
         conn.close()
 
-    def buscar_producto(self, nombre):
+    def buscar_producto(self, texto):
         conn = conectar()
         cursor = conn.cursor()
 
-        cursor.execute(
-            "SELECT * FROM productos WHERE nombre LIKE ?",
-            (f"%{nombre}%",)
-        )
+        cursor.execute("""
+            SELECT id, sku, nombre, cantidad, precio
+            FROM productos
+            WHERE nombre LIKE ? OR sku LIKE ?
+        """, (f"%{texto}%", f"%{texto}%"))
 
         resultados = cursor.fetchall()
         conn.close()
