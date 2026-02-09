@@ -1,15 +1,8 @@
 from modelos.producto import Producto
 from servicios.inventario import Inventario
 
-
 def mostrar_menu():
-    """
-    Muestra en pantalla el menú principal del sistema de inventarios.
-
-    Decisión de diseño:
-    - Se separa la visualización del menú de la lógica de ejecución
-      para mejorar la legibilidad y facilitar futuras modificaciones.
-    """
+    """Muestra las opciones disponibles del sistema"""
     print("""
 ===== SISTEMA DE GESTIÓN DE INVENTARIOS =====
 1. Añadir producto
@@ -20,88 +13,96 @@ def mostrar_menu():
 6. Salir
 """)
 
-
 def ejecutar_menu():
     """
-    Controla el flujo principal de la aplicación mediante un menú interactivo.
-
-    Lógica implementada:
-    - Se crea una instancia de la clase Inventario, que gestiona las operaciones
-      sobre los productos.
-    - Se utiliza un bucle infinito para mantener el menú activo hasta que
-      el usuario decida salir del sistema.
-    - Se evalúa la opción ingresada por el usuario y se ejecuta la acción
-      correspondiente.
-
-    Decisiones de diseño:
-    - El menú opera exclusivamente con el SKU como identificador de negocio,
-      evitando el uso del ID técnico interno.
-    - Se permite actualizar únicamente los campos necesarios (cantidad y precio),
-      haciendo que los parámetros sean opcionales.
-    - La interfaz se mantiene simple, basada en consola, para facilitar su uso
-      y comprensión.
+    Función principal del menú.
+    Se encarga de interactuar con el usuario.
     """
-
-    # Se crea una instancia del inventario para gestionar los productos
     inventario = Inventario()
 
-    # Bucle principal del sistema
     while True:
         mostrar_menu()
         opcion = input("Seleccione una opción: ")
 
         # AÑADIR PRODUCTO
         if opcion == "1":
-            # Se solicitan los datos del producto al usuario
-            sku = input("SKU: ")
-            nombre = input("Nombre: ")
-            cantidad = int(input("Cantidad: "))
-            precio = float(input("Precio: "))
+            try:
+                sku = input("SKU: ")
+                nombre = input("Nombre: ")
+                cantidad = int(input("Cantidad: "))
+                precio = float(input("Precio: "))
 
-            # Se crea un objeto Producto con los datos ingresados
-            producto = Producto(sku, nombre, cantidad, precio)
+                producto = Producto(sku, nombre, cantidad, precio)
 
-            # Se agrega el producto al inventario
-            inventario.agregar_producto(producto)
+                if inventario.agregar_producto(producto):
+                    print("Producto agregado correctamente")
+                else:
+                    print("Error: SKU duplicado")
 
-        # ELIMINAR PRODUCTO POR SKU
+            except ValueError as e:
+                print(f"Error: {e}")
+
+        # ELIMINAR PRODUCTO
         elif opcion == "2":
-            # Se solicita el SKU del producto a eliminar
             sku = input("SKU del producto a eliminar: ")
-            inventario.eliminar_producto(sku)
 
-        # ACTUALIZAR PRODUCTO POR SKU
+            if inventario.eliminar_producto(sku):
+                print("Producto eliminado")
+            else:
+                print("Producto no encontrado")
+
+        # ACTUALIZAR PRODUCTO
         elif opcion == "3":
-            # Se solicita el SKU del producto a actualizar
-            sku = input("SKU del producto a actualizar: ")
-
-            # Los campos pueden omitirse presionando Enter
+            sku = input("SKU del producto: ")
             cantidad = input("Nueva cantidad (Enter para omitir): ")
             precio = input("Nuevo precio (Enter para omitir): ")
 
-            # Se envían solo los valores ingresados
-            inventario.actualizar_producto(
+            actualizado = inventario.actualizar_producto(
                 sku,
                 int(cantidad) if cantidad else None,
                 float(precio) if precio else None
             )
 
-        # BUSCAR PRODUCTO (por nombre o SKU)
+            if actualizado:
+                print("Producto actualizado")
+            else:
+                print("Producto no encontrado")
+
+        # BUSCAR PRODUCTO
         elif opcion == "4":
-            # Se permite buscar productos usando nombre o SKU
-            texto = input("Ingrese nombre o SKU a buscar: ")
-            inventario.buscar_producto(texto)
+            texto = input("Ingrese nombre o SKU: ")
+            productos = inventario.buscar_producto(texto)
+
+            if productos:
+                for p in productos:
+                    print(
+                        f"SKU: {p.get_sku()} | "
+                        f"Nombre: {p.get_nombre()} | "
+                        f"Cantidad: {p.get_cantidad()} | "
+                        f"Precio: ${p.get_precio()}"
+                    )
+            else:
+                print("No se encontraron productos")
 
         # LISTAR INVENTARIO
         elif opcion == "5":
-            # Se muestran todos los productos registrados
-            inventario.listar_productos()
+            productos = inventario.listar_productos()
 
-        # SALIR DEL SISTEMA
+            if productos:
+                for p in productos:
+                    print(
+                        f"SKU: {p.get_sku()} | "
+                        f"Nombre: {p.get_nombre()} | "
+                        f"Cantidad: {p.get_cantidad()} | "
+                        f"Precio: ${p.get_precio()}"
+                    )
+            else:
+                print("Inventario vacío")
+
+        # SALIR
         elif opcion == "6":
             print("Saliendo del sistema...")
             break
 
-        # OPCIÓN INVÁLIDA
         else:
-            print("Opción inválida, intente nuevamente")
+            print("Opción inválida")
