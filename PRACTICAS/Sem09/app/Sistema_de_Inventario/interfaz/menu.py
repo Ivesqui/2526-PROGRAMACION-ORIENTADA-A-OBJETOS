@@ -1,17 +1,20 @@
 from modelos.producto import Producto
 from servicios.inventario import Inventario
+from reportes.reporte_excel import generar_excel_inventario
 
 def mostrar_menu():
     """Muestra las opciones disponibles del sistema"""
     print("""
-===== SISTEMA DE GESTIÓN DE INVENTARIOS =====
-1. Añadir producto
-2. Eliminar producto
-3. Actualizar producto
-4. Buscar producto
-5. Listar inventario
-6. Salir
-""")
+    ===== SISTEMA DE GESTIÓN DE INVENTARIOS =====
+    1. Añadir producto
+    2. Eliminar producto
+    3. Actualizar producto
+    4. Buscar producto
+    5. Listar inventario
+    6. Exportar inventario a Excel
+    7. Salir
+    """)
+
 
 def ejecutar_menu():
     """
@@ -99,8 +102,13 @@ def ejecutar_menu():
             else:
                 print("Inventario vacío")
 
-        # SALIR
+        # GENERAR EXCEL
+
         elif opcion == "6":
+            generar_excel_inventario()
+
+        # SALIR
+        elif opcion == "7":
             print("Saliendo del sistema...")
             break
 
