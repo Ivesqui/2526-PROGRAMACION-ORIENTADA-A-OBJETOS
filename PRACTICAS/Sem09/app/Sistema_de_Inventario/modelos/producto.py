@@ -1,72 +1,37 @@
 class Producto:
-    def __init__(self, sku, nombre, cantidad, precio):
-        """
-        Constructor de la clase Producto.
+    """
+    Representa un producto del inventario.
 
-        Aquí se valida que los datos cumplan reglas básicas de negocio,
-        evitando que existan productos inválidos dentro del sistema.
-        """
+    Esta clase NO maneja base de datos.
+    Solo representa reglas de negocio.
+    """
 
-        # Validación: el SKU no puede estar vacío ni contener solo espacios
+    def __init__(self, sku, nombre, cantidad, precio, stock_minimo=5):
         if not sku or not sku.strip():
             raise ValueError("El SKU no puede estar vacío")
 
-        # Validación: el nombre del producto es obligatorio
         if not nombre or not nombre.strip():
             raise ValueError("El nombre no puede estar vacío")
 
-        # Validación: la cantidad no puede ser negativa
         if cantidad < 0:
             raise ValueError("La cantidad no puede ser negativa")
 
-        # Validación: el precio no puede ser negativo
         if precio < 0:
             raise ValueError("El precio no puede ser negativo")
 
-        # Atributos privados (encapsulamiento)
+        if stock_minimo < 0:
+            raise ValueError("El stock mínimo no puede ser negativo")
+
         self.__sku = sku
         self.__nombre = nombre
         self.__cantidad = cantidad
         self.__precio = precio
+        self.__stock_minimo = stock_minimo
 
-    # =========================
     # Getters
-    # =========================
+    def get_sku(self): return self.__sku
+    def get_nombre(self): return self.__nombre
+    def get_cantidad(self): return self.__cantidad
+    def get_precio(self): return self.__precio
+    def get_stock_minimo(self): return self.__stock_minimo
 
-    def get_sku(self):
-        """Devuelve el SKU del producto"""
-        return self.__sku
-
-    def get_nombre(self):
-        """Devuelve el nombre del producto"""
-        return self.__nombre
-
-    def get_cantidad(self):
-        """Devuelve la cantidad disponible"""
-        return self.__cantidad
-
-    def get_precio(self):
-        """Devuelve el precio del producto"""
-        return self.__precio
-
-    # =========================
-    # Setters con validación
-    # =========================
-
-    def set_cantidad(self, cantidad):
-        """
-        Actualiza la cantidad del producto.
-        Se valida que no sea negativa.
-        """
-        if cantidad < 0:
-            raise ValueError("La cantidad no puede ser negativa")
-        self.__cantidad = cantidad
-
-    def set_precio(self, precio):
-        """
-        Actualiza el precio del producto.
-        Se valida que no sea negativo.
-        """
-        if precio < 0:
-            raise ValueError("El precio no puede ser negativo")
-        self.__precio = precio
