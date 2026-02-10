@@ -2,62 +2,77 @@ import sqlite3
 import pandas as pd
 from datetime import datetime
 
+
 def generar_excel_inventario(db_path="inventario.db"):
     """
     Genera un archivo Excel con el inventario actual del sistema.
 
-    Este reporte está diseñado con enfoque empresarial:
-    - Puede ser consumido directamente por Power BI
-    - Sirve para análisis de stock, costos y toma de decisiones
-    - No contiene formatos visuales, solo datos estructurados
+    Enfoque empresarial:
+    - Control real de stock
+    - Análisis de costos
+    - Compatible con Power BI
+    - Preparado para histórico y auditoría
 
-    Decisiones de diseño:
-    - Se consulta directamente la base de datos para evitar duplicar lógica
-    - Se calculan métricas clave (valor_total, estado_stock)
-    - Se agrega una marca temporal para permitir análisis histórico
+    El reporte:
+    - Usa solo productos activos
+    - Calcula valor del inventario con precio de compra
+    - Evalúa estado del stock automáticamente
     """
 
     # --------------------------------------------------
-    # 1. Conexión a la base de datos SQLite
+    # 1. Conexión a la base de datos
     # --------------------------------------------------
     conn = sqlite3.connect(db_path)
 
     # --------------------------------------------------
-    # 2. Consulta SQL orientada a negocio
-    #    (no solo datos crudos)
+    # 2. Consulta SQL alineada al nuevo modelo
     # --------------------------------------------------
     query = """
         SELECT
             sku,
-            nombre,
-            cantidad,
-            precio AS precio_unitario,
-            cantidad * precio AS valor_total,
-            5 AS stock_minimo
+            nombre_producto,
+            categoria,
+            unidad,
+            precio_compra,
+            precio_venta,
+            stock_actual,
+            stock_minimo,
+            (stock_actual * precio_compra) AS valor_inventario,
+            fecha_creacion,
+            fecha_actualizacion
         FROM productos
+        WHERE activo = 1
     """
 
-    # Se carga el resultado directamente en un DataFrame
+    # Cargar resultados en DataFrame
     df = pd.read_sql_query(query, conn)
 
-    # Cerramos la conexión para liberar recursos
+    # Cerrar conexión
     conn.close()
 
     # --------------------------------------------------
     # 3. Regla de negocio: estado del stock
     # --------------------------------------------------
     df["estado_stock"] = df.apply(
-        lambda fila: "BAJO" if fila["cantidad"] <= fila["stock_minimo"] else "OK",
+        lambda fila: "CRÍTICO"
+        if fila["stock_actual"] <= fila["stock_minimo"]
+        else "OK",
         axis=1
     )
 
     # --------------------------------------------------
-    # 4. Fecha del reporte (clave para histórico y BI)
+    # 4. Métricas adicionales útiles para negocio
+    # --------------------------------------------------
+    df["margen_unitario"] = df["precio_venta"] - df["precio_compra"]
+    df["margen_total"] = df["margen_unitario"] * df["stock_actual"]
+
+    # --------------------------------------------------
+    # 5. Fecha del reporte (clave para histórico)
     # --------------------------------------------------
     df["fecha_reporte"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # --------------------------------------------------
-    # 5. Exportación a Excel
+    # 6. Exportación a Excel
     # --------------------------------------------------
     df.to_excel(
         "inventario_emprendimiento.xlsx",

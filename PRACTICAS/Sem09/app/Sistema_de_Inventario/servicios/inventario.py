@@ -2,24 +2,17 @@ from database.conexion import conectar
 from modelos.producto import Producto
 from datetime import datetime
 
+
 class Inventario:
     """
-    Lógica de negocio del inventario.
-    Todas las modificaciones de stock generan movimientos.
+    Capa de lógica de negocio del inventario.
+    Toda interacción con la BD pasa por aquí.
     """
 
-    # ---------------------------------
-    # REGISTRO DE MOVIMIENTOS
-    # ---------------------------------
+    # ======================================================
+    # REGISTRAR MOVIMIENTO (KARDEX)
+    # ======================================================
     def _registrar_movimiento(self, sku, tipo, cantidad, motivo):
-        """
-        Registra cualquier cambio de stock.
-
-        Esto permite:
-        - Auditoría
-        - Trazabilidad
-        - Confianza en el sistema
-        """
         conn = conectar()
         cursor = conn.cursor()
 
@@ -37,27 +30,41 @@ class Inventario:
         conn.commit()
         conn.close()
 
-    # ---------------------------------
-    # AGREGAR PRODUCTO
-    # ---------------------------------
-    def agregar_producto(self, producto):
+    # ======================================================
+    # REGISTRAR PRODUCTO
+    # ======================================================
+    def agregar_producto(self, producto: Producto):
         conn = conectar()
         cursor = conn.cursor()
-        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        ahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         try:
             cursor.execute("""
-                INSERT INTO productos
-                (sku, nombre, cantidad, precio, stock_minimo, fecha_creacion, fecha_actualizacion)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO productos (
+                    sku,
+                    nombre_producto,
+                    categoria,
+                    unidad,
+                    precio_compra,
+                    precio_venta,
+                    stock_actual,
+                    stock_minimo,
+                    activo,
+                    fecha_creacion,
+                    fecha_actualizacion
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 producto.get_sku(),
-                producto.get_nombre(),
-                producto.get_cantidad(),
-                producto.get_precio(),
+                producto.get_nombre_producto(),
+                producto.get_categoria(),
+                producto.get_unidad(),
+                producto.get_precio_compra(),
+                producto.get_precio_venta(),
+                producto.get_stock_actual(),
                 producto.get_stock_minimo(),
-                fecha,
-                fecha
+                1,
+                ahora,
+                ahora
             ))
 
             conn.commit()
@@ -66,77 +73,167 @@ class Inventario:
             self._registrar_movimiento(
                 producto.get_sku(),
                 "ENTRADA",
-                producto.get_cantidad(),
-                "Alta inicial de producto"
+                producto.get_stock_actual(),
+                "Registro inicial del producto"
             )
 
             return True
 
-        except Exception:
+        except Exception as e:
+            print("ERROR BD:", e)
             return False
 
         finally:
             conn.close()
 
-    # ---------------------------------
-    # ACTUALIZAR STOCK
-    # ---------------------------------
-    def actualizar_stock(self, sku, nueva_cantidad, motivo="Ajuste manual"):
-        """
-        Actualiza el stock de un producto y registra el movimiento.
-        """
-
+    # ======================================================
+    # DAR DE BAJA (NO BORRA)
+    # ======================================================
+    def desactivar_producto(self, sku):
         conn = conectar()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT cantidad FROM productos WHERE sku = ?", (sku,))
-        fila = cursor.fetchone()
+        cursor.execute("""
+            UPDATE productos
+            SET activo = 0, fecha_actualizacion = ?
+            WHERE sku = ?
+        """, (
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            sku
+        ))
 
+        conn.commit()
+        filas = cursor.rowcount
+        conn.close()
+
+        return filas > 0
+
+    # ======================================================
+    # ACTUALIZAR STOCK / PRECIOS
+    # ======================================================
+    def actualizar_producto(self, sku, stock=None, precio_compra=None, precio_venta=None):
+        conn = conectar()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT stock_actual, precio_compra, precio_venta
+            FROM productos
+            WHERE sku = ? AND activo = 1
+        """, (sku,))
+
+        fila = cursor.fetchone()
         if not fila:
             conn.close()
             return False
 
-        cantidad_actual = fila[0]
-        diferencia = nueva_cantidad - cantidad_actual
+        stock_actual, pc_actual, pv_actual = fila
 
-        tipo = "ENTRADA" if diferencia > 0 else "SALIDA"
+        stock_final = stock if stock is not None else stock_actual
+        pc_final = precio_compra if precio_compra is not None else pc_actual
+        pv_final = precio_venta if precio_venta is not None else pv_actual
 
         cursor.execute("""
             UPDATE productos
-            SET cantidad = ?, fecha_actualizacion = ?
+            SET
+                stock_actual = ?,
+                precio_compra = ?,
+                precio_venta = ?,
+                fecha_actualizacion = ?
             WHERE sku = ?
         """, (
-            nueva_cantidad,
+            stock_final,
+            pc_final,
+            pv_final,
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             sku
         ))
 
         conn.commit()
         conn.close()
-
-        self._registrar_movimiento(
-            sku,
-            tipo,
-            abs(diferencia),
-            motivo
-        )
-
         return True
 
-    # ---------------------------------
-    # CONSULTA DE MOVIMIENTOS
-    # ---------------------------------
-    def listar_movimientos(self):
+    # ======================================================
+    # LISTAR INVENTARIO
+    # ======================================================
+    def listar_productos(self):
         conn = conectar()
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT sku, tipo, cantidad, motivo, fecha
-            FROM movimientos
-            ORDER BY fecha DESC
+            SELECT
+                sku,
+                nombre_producto,
+                categoria,
+                unidad,
+                precio_compra,
+                precio_venta,
+                stock_actual,
+                stock_minimo,
+                activo
+            FROM productos
+            ORDER BY nombre_producto
         """)
 
-        movimientos = cursor.fetchall()
+        filas = cursor.fetchall()
         conn.close()
-        return movimientos
 
+        productos = []
+        for f in filas:
+            productos.append(
+                Producto(
+                    sku=f[0],
+                    nombre_producto=f[1],
+                    categoria=f[2],
+                    unidad=f[3],
+                    precio_compra=f[4],
+                    precio_venta=f[5],
+                    stock_actual=f[6],
+                    stock_minimo=f[7],
+                    activo=bool(f[8])
+                )
+            )
+
+        return productos
+
+    # ======================================================
+    # BUSCAR PRODUCTO
+    # ======================================================
+    def buscar_producto(self, texto):
+        conn = conectar()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT
+                sku,
+                nombre_producto,
+                categoria,
+                unidad,
+                precio_compra,
+                precio_venta,
+                stock_actual,
+                stock_minimo,
+                activo
+            FROM productos
+            WHERE sku LIKE ? OR nombre_producto LIKE ?
+        """, (f"%{texto}%", f"%{texto}%"))
+
+        filas = cursor.fetchall()
+        conn.close()
+
+        productos = []
+        for f in filas:
+            productos.append(
+                Producto(
+                    sku=f[0],
+                    nombre_producto=f[1],
+                    categoria=f[2],
+                    unidad=f[3],
+                    precio_compra=f[4],
+                    precio_venta=f[5],
+                    stock_actual=f[6],
+                    stock_minimo=f[7],
+                    activo=bool(f[8])
+                )
+            )
+
+        return productos
