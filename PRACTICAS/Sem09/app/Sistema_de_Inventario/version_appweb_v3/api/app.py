@@ -1,6 +1,5 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
-from flask import send_file
 from reportes.reporte_excel import generar_excel_inventario_en_memoria
 from database.conexion import crear_tablas
 from servicios.inventario import Inventario
@@ -9,9 +8,7 @@ from modelos.producto import Producto
 app = Flask(__name__)
 CORS(app)
 
-# Inicializar BD
 crear_tablas()
-
 inventario = Inventario()
 
 # ======================================================
@@ -57,10 +54,10 @@ def obtener_producto(sku):
         "activo": p.esta_activo()
     })
 
-# ======================================================
-# BUSCAR PRODUCTO POR NOMBRE
-# ======================================================
 
+# ======================================================
+# BUSCAR POR NOMBRE
+# ======================================================
 @app.route("/productos/nombre/<nombre>", methods=["GET"])
 def buscar_por_nombre(nombre):
     productos = inventario.buscar_por_nombre(nombre)
@@ -80,7 +77,7 @@ def buscar_por_nombre(nombre):
 
 
 # ======================================================
-# BUSCAR POR CODIGO DE BARRAS (IDEAL ESCANER)
+# BUSCAR POR CÓDIGO DE BARRAS
 # ======================================================
 @app.route("/productos/barcode/<codigo>", methods=["GET"])
 def obtener_por_barcode(codigo):
@@ -130,7 +127,7 @@ def crear_producto():
 
 
 # ======================================================
-# ACTUALIZAR TOTALMENTE EL PRODUCTO
+# ACTUALIZAR TOTALMENTE
 # ======================================================
 @app.route("/productos/<sku>", methods=["PUT"])
 def actualizar_producto(sku):
@@ -149,18 +146,15 @@ def actualizar_producto(sku):
     else:
         return jsonify({"error": "Producto no encontrado"}), 404
 
-# ======================================================
-# ACTUALIZAR PARCIALMENTE UN PRODUCTO
-# ======================================================
 
+# ======================================================
+# ACTUALIZAR PARCIAL
+# ======================================================
 @app.route("/productos/<sku>", methods=["PATCH"])
 def actualizar_parcial(sku):
     data = request.json
 
-    actualizado = inventario.actualizar_parcial(
-        sku=sku,
-        datos=data
-    )
+    actualizado = inventario.actualizar_parcial(sku, data)
 
     if actualizado:
         return jsonify({"mensaje": "Producto actualizado parcialmente"})
@@ -168,9 +162,8 @@ def actualizar_parcial(sku):
         return jsonify({"error": "Producto no encontrado"}), 404
 
 
-
 # ======================================================
-# DESACTIVAR PRODUCTO
+# DAR DE BAJA
 # ======================================================
 @app.route("/productos/<sku>/baja", methods=["PATCH"])
 def dar_de_baja(sku):
@@ -181,7 +174,66 @@ def dar_de_baja(sku):
 
 
 # ======================================================
-# GENERAR REPORTE EN EXCEL
+# REGISTRAR MOVIMIENTO
+# ======================================================
+@app.route("/movimientos", methods=["POST"])
+def crear_movimiento():
+    data = request.json
+
+    try:
+        producto = inventario.registrar_movimiento(
+            sku=data["sku"],
+            tipo=data["tipo"],
+            cantidad=int(data["cantidad"]),
+            motivo=data.get("motivo", "")
+        )
+
+        if not producto:
+            return jsonify({"error": "Producto no encontrado"}), 404
+
+        return jsonify({"mensaje": "Movimiento registrado correctamente"})
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+
+# ======================================================
+# VER KARDEX
+# ======================================================
+@app.route("/productos/<sku>/movimientos", methods=["GET"])
+def obtener_movimientos(sku):
+    movimientos = inventario.obtener_movimientos_por_sku(sku)
+    return jsonify(movimientos)
+
+
+# ======================================================
+# DASHBOARD
+# ======================================================
+@app.route("/dashboard/resumen", methods=["GET"])
+def resumen_dashboard():
+    productos = inventario.listar_productos()
+
+    total = len(productos)
+
+    criticos = [
+        p for p in productos
+        if p.get_stock_actual() <= p.get_stock_minimo()
+    ]
+
+    valor_total = sum(
+        p.get_stock_actual() * p.get_precio_compra()
+        for p in productos
+    )
+
+    return jsonify({
+        "total_productos": total,
+        "productos_criticos": len(criticos),
+        "valor_total_inventario": valor_total
+    })
+
+
+# ======================================================
+# REPORTE EXCEL
 # ======================================================
 @app.route("/reportes/inventario/excel", methods=["GET"])
 def descargar_excel():
@@ -197,3 +249,4 @@ def descargar_excel():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
