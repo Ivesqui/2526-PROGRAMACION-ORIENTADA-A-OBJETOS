@@ -1,9 +1,11 @@
-from database.conexion import crear_tablas
-from interfaz.menu import ejecutar_menu
+from infrastructure.repositories.sqlite_producto_repository import SQLiteProductoRepository
+from services.inventario_service import InventarioService
+from flask import Flask
 
-def main():
-    crear_tablas()     # Inicializa la base de datos
-    ejecutar_menu()   # Muestra el menú
+app = Flask(__name__)
 
-if __name__ == "__main__":
-    main()
+# Configuración de dependencias (Composition Root)
+repo = SQLiteProductoRepository()
+inventario_service = InventarioService(repo)
+
+# Ahora tus rutas en web/ utilizan inventario_service...
