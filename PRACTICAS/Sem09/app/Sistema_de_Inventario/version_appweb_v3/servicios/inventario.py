@@ -1,6 +1,6 @@
+from datetime import datetime
 from database.conexion import conectar
 from modelos.producto import Producto
-from datetime import datetime
 
 
 class Inventario:
@@ -42,6 +42,7 @@ class Inventario:
             cursor.execute("""
                 INSERT INTO productos (
                     sku,
+                    codigo_barras,
                     nombre_producto,
                     categoria,
                     unidad,
@@ -52,9 +53,10 @@ class Inventario:
                     activo,
                     fecha_creacion,
                     fecha_actualizacion
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 producto.get_sku(),
+                producto.get_codigo_barras(),
                 producto.get_nombre_producto(),
                 producto.get_categoria(),
                 producto.get_unidad(),
@@ -109,14 +111,21 @@ class Inventario:
         return filas > 0
 
     # ======================================================
-    # ACTUALIZAR STOCK / PRECIOS
+    # ACTUALIZAR STOCK / PRECIOS / CODIGO_BARRAS
     # ======================================================
-    def actualizar_producto(self, sku, stock=None, precio_compra=None, precio_venta=None):
+    def actualizar_producto(
+        self,
+        sku,
+        stock=None,
+        precio_compra=None,
+        precio_venta=None,
+        codigo_barras=None
+    ):
         conn = conectar()
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT stock_actual, precio_compra, precio_venta
+            SELECT stock_actual, precio_compra, precio_venta, codigo_barras
             FROM productos
             WHERE sku = ? AND activo = 1
         """, (sku,))
@@ -126,31 +135,41 @@ class Inventario:
             conn.close()
             return False
 
-        stock_actual, pc_actual, pv_actual = fila
+        stock_actual, pc_actual, pv_actual, cb_actual = fila
 
         stock_final = stock if stock is not None else stock_actual
         pc_final = precio_compra if precio_compra is not None else pc_actual
         pv_final = precio_venta if precio_venta is not None else pv_actual
+        cb_final = codigo_barras if codigo_barras is not None else cb_actual
 
-        cursor.execute("""
-            UPDATE productos
-            SET
-                stock_actual = ?,
-                precio_compra = ?,
-                precio_venta = ?,
-                fecha_actualizacion = ?
-            WHERE sku = ?
-        """, (
-            stock_final,
-            pc_final,
-            pv_final,
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            sku
-        ))
+        try:
+            cursor.execute("""
+                UPDATE productos
+                SET
+                    stock_actual = ?,
+                    precio_compra = ?,
+                    precio_venta = ?,
+                    codigo_barras = ?,
+                    fecha_actualizacion = ?
+                WHERE sku = ?
+            """, (
+                stock_final,
+                pc_final,
+                pv_final,
+                cb_final,
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                sku
+            ))
 
-        conn.commit()
-        conn.close()
-        return True
+            conn.commit()
+            return True
+
+        except Exception as e:
+            print("ERROR al actualizar:", e)
+            return False
+
+        finally:
+            conn.close()
 
     # ======================================================
     # LISTAR INVENTARIO
@@ -162,6 +181,7 @@ class Inventario:
         cursor.execute("""
             SELECT
                 sku,
+                codigo_barras,
                 nombre_producto,
                 categoria,
                 unidad,
@@ -182,21 +202,22 @@ class Inventario:
             productos.append(
                 Producto(
                     sku=f[0],
-                    nombre_producto=f[1],
-                    categoria=f[2],
-                    unidad=f[3],
-                    precio_compra=f[4],
-                    precio_venta=f[5],
-                    stock_actual=f[6],
-                    stock_minimo=f[7],
-                    activo=bool(f[8])
+                    codigo_barras=f[1],
+                    nombre_producto=f[2],
+                    categoria=f[3],
+                    unidad=f[4],
+                    precio_compra=f[5],
+                    precio_venta=f[6],
+                    stock_actual=f[7],
+                    stock_minimo=f[8],
+                    activo=bool(f[9])
                 )
             )
 
         return productos
 
     # ======================================================
-    # BUSCAR PRODUCTO
+    # BUSCAR PRODUCTO (SKU, NOMBRE o CODIGO_BARRAS)
     # ======================================================
     def buscar_producto(self, texto):
         conn = conectar()
@@ -205,6 +226,7 @@ class Inventario:
         cursor.execute("""
             SELECT
                 sku,
+                codigo_barras,
                 nombre_producto,
                 categoria,
                 unidad,
@@ -214,8 +236,10 @@ class Inventario:
                 stock_minimo,
                 activo
             FROM productos
-            WHERE sku LIKE ? OR nombre_producto LIKE ?
-        """, (f"%{texto}%", f"%{texto}%"))
+            WHERE sku LIKE ?
+               OR nombre_producto LIKE ?
+               OR codigo_barras LIKE ?
+        """, (f"%{texto}%", f"%{texto}%", f"%{texto}%"))
 
         filas = cursor.fetchall()
         conn.close()
@@ -225,15 +249,59 @@ class Inventario:
             productos.append(
                 Producto(
                     sku=f[0],
-                    nombre_producto=f[1],
-                    categoria=f[2],
-                    unidad=f[3],
-                    precio_compra=f[4],
-                    precio_venta=f[5],
-                    stock_actual=f[6],
-                    stock_minimo=f[7],
-                    activo=bool(f[8])
+                    codigo_barras=f[1],
+                    nombre_producto=f[2],
+                    categoria=f[3],
+                    unidad=f[4],
+                    precio_compra=f[5],
+                    precio_venta=f[6],
+                    stock_actual=f[7],
+                    stock_minimo=f[8],
+                    activo=bool(f[9])
                 )
             )
 
         return productos
+
+    # ======================================================
+    # BUSCAR POR CODIGO DE BARRAS EXACTO (IDEAL PARA ESCANER)
+    # ======================================================
+    def buscar_por_codigo_barras(self, codigo):
+        conn = conectar()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT
+                sku,
+                codigo_barras,
+                nombre_producto,
+                categoria,
+                unidad,
+                precio_compra,
+                precio_venta,
+                stock_actual,
+                stock_minimo,
+                activo
+            FROM productos
+            WHERE codigo_barras = ?
+              AND activo = 1
+        """, (codigo,))
+
+        fila = cursor.fetchone()
+        conn.close()
+
+        if not fila:
+            return None
+
+        return Producto(
+            sku=fila[0],
+            codigo_barras=fila[1],
+            nombre_producto=fila[2],
+            categoria=fila[3],
+            unidad=fila[4],
+            precio_compra=fila[5],
+            precio_venta=fila[6],
+            stock_actual=fila[7],
+            stock_minimo=fila[8],
+            activo=bool(fila[9])
+        )

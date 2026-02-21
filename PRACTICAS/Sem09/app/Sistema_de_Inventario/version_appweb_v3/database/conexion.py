@@ -43,6 +43,7 @@ def crear_tablas():
         CREATE TABLE IF NOT EXISTS productos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             sku TEXT UNIQUE NOT NULL,
+            codigo_barras TEXT UNIQUE,
             nombre_producto TEXT NOT NULL,
             categoria TEXT NOT NULL,
             descripcion TEXT,

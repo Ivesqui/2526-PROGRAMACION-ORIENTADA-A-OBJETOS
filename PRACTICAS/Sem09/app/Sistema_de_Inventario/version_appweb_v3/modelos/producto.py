@@ -6,16 +6,17 @@ class Producto:
     """
 
     def __init__(
-        self,
-        sku: str,
-        nombre_producto: str,
-        categoria: str,
-        unidad: str,
-        precio_compra: float,
-        precio_venta: float,
-        stock_actual: int,
-        stock_minimo: int,
-        activo: bool = True
+            self,
+            sku: str,
+            nombre_producto: str,
+            categoria: str,
+            unidad: str,
+            precio_compra: float,
+            precio_venta: float,
+            stock_actual: int,
+            stock_minimo: int,
+            activo: bool = True,
+            codigo_barras: str = None
     ):
         # -------------------------
         # Validaciones de negocio
@@ -50,6 +51,7 @@ class Producto:
         self.__stock_actual = stock_actual
         self.__stock_minimo = stock_minimo
         self.__activo = activo
+        self.__codigo_barras = codigo_barras
 
     # -------------------------
     # Getters
@@ -80,3 +82,6 @@ class Producto:
 
     def esta_activo(self):
         return self.__activo
+
+    def get_codigo_barras(self):
+        return self.__codigo_barras
