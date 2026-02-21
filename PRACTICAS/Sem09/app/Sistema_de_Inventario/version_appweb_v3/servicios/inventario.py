@@ -305,3 +305,37 @@ class Inventario:
             stock_minimo=fila[8],
             activo=bool(fila[9])
         )
+
+    # ======================================================
+    # BUSCAR POR NOMBRE DE PRODUCTO
+    # ======================================================
+    def buscar_por_nombre(self, nombre):
+        conn = conectar()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT * FROM productos
+            WHERE nombre_producto LIKE ?
+        """, (f"%{nombre}%",))
+
+        filas = cursor.fetchall()
+        conn.close()
+
+        productos = []
+
+        for fila in filas:
+            producto = Producto(
+            sku=fila[0],
+            codigo_barras=fila[1],
+            nombre_producto=fila[2],
+            categoria=fila[3],
+            unidad=fila[4],
+            precio_compra=fila[5],
+            precio_venta=fila[6],
+            stock_actual=fila[7],
+            stock_minimo=fila[8],
+            activo=bool(fila[9])
+        )
+        productos.append(producto)
+
+        return productos

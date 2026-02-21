@@ -1,6 +1,7 @@
 import sqlite3
 import pandas as pd
 from datetime import datetime
+import io
 
 
 def generar_excel_inventario(db_path="inventario.db"):
@@ -81,3 +82,46 @@ def generar_excel_inventario(db_path="inventario.db"):
     )
 
     print("✅ Excel de inventario generado correctamente")
+
+def generar_excel_inventario_en_memoria(db_path="inventario.db"):
+    conn = sqlite3.connect(db_path)
+
+    query = """
+        SELECT
+            sku,
+            nombre_producto,
+            categoria,
+            unidad,
+            precio_compra,
+            precio_venta,
+            stock_actual,
+            stock_minimo,
+            (stock_actual * precio_compra) AS valor_inventario,
+            fecha_creacion,
+            fecha_actualizacion
+        FROM productos
+        WHERE activo = 1
+    """
+
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+
+    df["estado_stock"] = df.apply(
+        lambda fila: "CRÍTICO"
+        if fila["stock_actual"] <= fila["stock_minimo"]
+        else "OK",
+        axis=1
+    )
+
+    df["margen_unitario"] = df["precio_venta"] - df["precio_compra"]
+    df["margen_total"] = df["margen_unitario"] * df["stock_actual"]
+
+    df["fecha_reporte"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+    # Guardar en memoria
+    output = io.BytesIO()
+    df.to_excel(output, index=False, sheet_name="Inventario")
+    output.seek(0)
+
+    return output

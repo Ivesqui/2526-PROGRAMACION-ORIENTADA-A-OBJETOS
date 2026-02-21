@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask import send_file
+from reportes.reporte_excel import generar_excel_inventario_en_memoria
 from database.conexion import crear_tablas
 from servicios.inventario import Inventario
 from modelos.producto import Producto
@@ -55,6 +57,27 @@ def obtener_producto(sku):
         "activo": p.esta_activo()
     })
 
+# ======================================================
+# BUSCAR PRODUCTO POR NOMBRE
+# ======================================================
+
+@app.route("/productos/nombre/<nombre>", methods=["GET"])
+def buscar_por_nombre(nombre):
+    productos = inventario.buscar_por_nombre(nombre)
+
+    return jsonify([
+        {
+            "sku": p.get_sku(),
+            "codigo_barras": p.get_codigo_barras(),
+            "nombre": p.get_nombre_producto(),
+            "categoria": p.get_categoria(),
+            "stock": p.get_stock_actual(),
+            "precio_venta": p.get_precio_venta(),
+            "activo": p.esta_activo()
+        }
+        for p in productos
+    ])
+
 
 # ======================================================
 # BUSCAR POR CODIGO DE BARRAS (IDEAL ESCANER)
@@ -107,7 +130,7 @@ def crear_producto():
 
 
 # ======================================================
-# ACTUALIZAR PRODUCTO
+# ACTUALIZAR TOTALMENTE EL PRODUCTO
 # ======================================================
 @app.route("/productos/<sku>", methods=["PUT"])
 def actualizar_producto(sku):
@@ -126,16 +149,50 @@ def actualizar_producto(sku):
     else:
         return jsonify({"error": "Producto no encontrado"}), 404
 
+# ======================================================
+# ACTUALIZAR PARCIALMENTE UN PRODUCTO
+# ======================================================
+
+@app.route("/productos/<sku>", methods=["PATCH"])
+def actualizar_parcial(sku):
+    data = request.json
+
+    actualizado = inventario.actualizar_parcial(
+        sku=sku,
+        datos=data
+    )
+
+    if actualizado:
+        return jsonify({"mensaje": "Producto actualizado parcialmente"})
+    else:
+        return jsonify({"error": "Producto no encontrado"}), 404
+
+
 
 # ======================================================
 # DESACTIVAR PRODUCTO
 # ======================================================
-@app.route("/productos/<sku>", methods=["DELETE"])
-def eliminar_producto(sku):
+@app.route("/productos/<sku>/baja", methods=["PATCH"])
+def dar_de_baja(sku):
     if inventario.desactivar_producto(sku):
         return jsonify({"mensaje": "Producto desactivado"})
     else:
         return jsonify({"error": "Producto no encontrado"}), 404
+
+
+# ======================================================
+# GENERAR REPORTE EN EXCEL
+# ======================================================
+@app.route("/reportes/inventario/excel", methods=["GET"])
+def descargar_excel():
+    archivo = generar_excel_inventario_en_memoria()
+
+    return send_file(
+        archivo,
+        as_attachment=True,
+        download_name="inventario_emprendimiento.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 
 if __name__ == "__main__":
