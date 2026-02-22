@@ -3,24 +3,31 @@ import sqlite3
 
 def conectar():
     """
-    Establece y retorna una conexión a la base de datos SQLite.
+    Crea y devuelve una conexión a la base de datos SQLite.
 
-    Decisión de diseño:
-    - SQLite es suficiente para un emprendimiento pequeño o mediano.
-    - No requiere servidor.
-    - Permite trabajar con archivos (inventario.db).
+    Mejoras aplicadas:
+    - row_factory permite acceder a columnas por nombre
+    - Se activan foreign keys (SQLite las tiene desactivadas por defecto)
     """
-    return sqlite3.connect("inventario.db")
+
+    conn = sqlite3.connect("inventario.db")
+
+    # Permite acceder como diccionario: row["campo"]
+    conn.row_factory = sqlite3.Row
+
+    # Activar claves foráneas
+    conn.execute("PRAGMA foreign_keys = ON;")
+
+    return conn
 
 
 def crear_tablas():
     """
-    Crea las tablas necesarias para el sistema de inventario.
+    Crea las tablas principales del sistema.
 
-    Diseño del sistema:
-    - Se separa la información del producto (tabla productos)
-      del historial de movimientos (tabla movimientos).
-    - Esto permite trazabilidad, auditoría y reportes.
+    Diseño:
+    - productos → estado actual del inventario
+    - movimientos → historial completo (kardex)
     """
 
     conn = conectar()
@@ -29,15 +36,6 @@ def crear_tablas():
     # ==========================================================
     # TABLA: productos
     # ==========================================================
-    """
-    Representa el estado actual del inventario.
-
-    Campos clave:
-    - sku: identificador de negocio (no técnico)
-    - precio_compra / precio_venta: permiten calcular márgenes
-    - stock_actual / stock_minimo: permiten alertas
-    - activo: permite desactivar productos sin eliminarlos
-    """
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS productos (
@@ -61,17 +59,6 @@ def crear_tablas():
     # ==========================================================
     # TABLA: movimientos
     # ==========================================================
-    """
-    Registra cada cambio de stock.
-
-    Esta tabla NO representa el estado actual,
-    sino el HISTORIAL del inventario.
-
-    Campos importantes:
-    - tipo: ENTRADA / SALIDA / AJUSTE
-    - motivo: explica por qué ocurrió el movimiento
-    - fecha: permite auditoría y reportes
-    """
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS movimientos (
@@ -82,6 +69,7 @@ def crear_tablas():
             motivo TEXT NOT NULL,
             fecha TEXT NOT NULL,
             FOREIGN KEY (sku) REFERENCES productos(sku)
+                ON DELETE CASCADE
         )
     """)
 
