@@ -1,13 +1,6 @@
-## Universidad Estatal Amazónica
-- **Carrera:** Tecnologías de la Información  
-- **Asignatura:** Programación Orientada a Objetos  
-- **Curso:** 2do A  
-- **Estudiante:** Christian Iván Estupiñán Quintero  
-
----
 ## Sistema de Gestión de Inventarios
 
-Este repositorio contiene el desarrollo de un **Sistema de Gestión de Inventarios**, implementado como parte de las prácticas de la asignatura **Programación Orientada a Objetos**, utilizando el lenguaje **Python** y aplicando principios fundamentales de la **POO**, junto con persistencia de datos mediante **SQLite**.
+Este repositorio contiene el desarrollo de un API **Sistema de Gestión de Inventarios**, implementado como parte de las prácticas de la asignatura **Programación Orientada a Objetos**, utilizando el lenguaje **Python** y aplicando principios fundamentales de la **POO**, junto con persistencia de datos mediante **SQLite**.
 
 El sistema permite realizar operaciones CRUD (Crear, Leer, Actualizar y Eliminar) sobre productos, simulando el funcionamiento básico de un inventario real para una tienda o negocio pequeño.
 
@@ -100,7 +93,7 @@ Este formato facilita la identificación del tipo de producto y es comúnmente u
 
 ```
 Sistema_de_Inventario/
-├── database/
+├── core/
 │ ├── conexion.py
 │ └── init.py
 │
@@ -120,3 +113,17 @@ Sistema_de_Inventario/
 ├── main.py
 └── README.md
 ```
+
+# Actualizaciones
+
+Arquitectura en capas
+
+Separación de responsabilidades
+
+Seguridad con hashing
+
+JWT
+
+Decorators
+
+Inyección de dependencias manual

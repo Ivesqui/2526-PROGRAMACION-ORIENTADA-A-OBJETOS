@@ -4,7 +4,8 @@
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-
+from flask import send_file
+from services.reportes_excel_service import InventarioExcelService
 from core.entities.producto import Producto
 from services.inventario_service import InventarioService
 from services.sqlite_producto_repository import SqliteProductoRepository
@@ -18,7 +19,7 @@ CORS(app)
 
 repo = SqliteProductoRepository()
 inventario = InventarioService(repo)
-
+excel_service = InventarioExcelService(inventario)
 
 # ======================================================
 # RESPUESTAS ESTÁNDAR
@@ -215,6 +216,22 @@ def dashboard():
     resumen = inventario.obtener_resumen_dashboard()
 
     return success_response(data=resumen)
+
+# ======================================================
+# REPORTE INVENTARIO EXCEL
+# ======================================================
+@app.route("/reportes/inventario/excel", methods=["GET"])
+def descargar_excel_inventario():
+
+    archivo_excel = excel_service.generar_excel_en_memoria()
+
+    return send_file(
+        archivo_excel,
+        as_attachment=True,
+        download_name="reporte_inventario.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
 
 
 # ======================================================
