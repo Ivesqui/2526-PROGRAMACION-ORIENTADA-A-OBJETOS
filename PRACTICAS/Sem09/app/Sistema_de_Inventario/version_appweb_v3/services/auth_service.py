@@ -1,4 +1,4 @@
-from entities.usuario import Usuario
+from core.entities.usuario import Usuario
 from security.hash_utils import hash_password, verify_password
 from security.jwt_utils import crear_token
 
@@ -22,8 +22,11 @@ class AuthService:
             rol=rol
         )
 
-        self.repo.guardar(usuario)
-
+        usuario = self.repo.guardar(usuario)
+        print("PASSWORD RECIBIDO:", password)
+        print("LENGTH:", len(password))
+        print("PASSWORD RECIBIDO:", password)
+        print("LENGTH:", len(password))
         return usuario
 
     def login(self, email, password):

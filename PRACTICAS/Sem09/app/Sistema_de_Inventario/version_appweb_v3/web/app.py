@@ -1,14 +1,19 @@
 # ======================================================
 # API WEB - SISTEMA DE INVENTARIO
 # ======================================================
-
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask import send_file
-from services.reportes_excel_service import InventarioExcelService
 from core.entities.producto import Producto
+from services.auth_service import AuthService
 from services.inventario_service import InventarioService
-from services.sqlite_producto_repository import SqliteProductoRepository
+from services.reportes_excel_service import InventarioExcelService
+from repositories.sqlite_producto_repository import SqliteProductoRepository
+from repositories.sqlite_usuario_repository import SqliteUsuarioRepository
+from security.decorators import token_required
+
+
 
 # ======================================================
 # CONFIGURACIÓN
@@ -16,10 +21,14 @@ from services.sqlite_producto_repository import SqliteProductoRepository
 
 app = Flask(__name__)
 CORS(app)
-
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "..", "inventario.db")
 repo = SqliteProductoRepository()
 inventario = InventarioService(repo)
+usuario_repo = SqliteUsuarioRepository(DB_PATH)
+auth_service = AuthService(usuario_repo)
 excel_service = InventarioExcelService(inventario)
+
 
 # ======================================================
 # RESPUESTAS ESTÁNDAR
@@ -37,6 +46,56 @@ def success_response(data=None, message=None, status=200):
 def error_response(message, status=400):
     return jsonify({"error": message}), status
 
+# ======================================================
+# AUTH
+# ======================================================
+
+@app.route("/auth/register", methods=["POST"])
+def register():
+    try:
+        data = request.get_json()
+        if not data:
+            return error_response("Datos requeridos", 400)
+
+        usuario = auth_service.registrar(
+            nombre=data["nombre"],
+            email=data["email"],
+            password=data["password"],
+            rol=data.get("rol", "OPERADOR")
+        )
+
+        return success_response(
+            data=usuario.to_dict(),
+            message="Usuario registrado",
+            status=201
+        )
+
+    except ValueError as e:
+        return error_response(str(e), 400)
+    #except Exception:
+    #    return error_response("Error interno del servidor", 500)
+    except Exception as e:
+        print("ERROR REGISTER:", e)
+        raise
+
+@app.route("/auth/login", methods=["POST"])
+def login():
+    try:
+        data = request.get_json()
+
+        token = auth_service.login(
+            email=data["email"],
+            password=data["password"]
+        )
+
+        return success_response(data={"token": token})
+
+    except ValueError as e:
+        return error_response(str(e), 401)
+    except Exception:
+        return error_response("Error interno del servidor", 500)
+
+
 
 # ======================================================
 # PRODUCTOS
@@ -44,6 +103,7 @@ def error_response(message, status=400):
 
 # ✔ Crear producto
 @app.route("/productos", methods=["POST"])
+@token_required # <- autenticación
 def crear_producto():
     try:
         data = request.get_json()
@@ -75,6 +135,7 @@ def crear_producto():
 
 # ✔ Listar todos / activos
 @app.route("/productos", methods=["GET"])
+@token_required # <- autenticación
 def listar_productos():
 
     estado = request.args.get("estado")  # ACTIVO / INACTIVO
@@ -86,6 +147,7 @@ def listar_productos():
 
 # ✔ Buscar por SKU
 @app.route("/productos/<sku>", methods=["GET"])
+@token_required # <- autenticación
 def buscar_por_sku(sku):
 
     producto = inventario.buscar_por_sku(sku)
@@ -98,6 +160,7 @@ def buscar_por_sku(sku):
 
 # ✔ Buscar por nombre
 @app.route("/productos/nombre/<nombre>", methods=["GET"])
+@token_required # <- autenticación
 def buscar_por_nombre(nombre):
 
     productos = inventario.buscar_por_nombre(nombre)
@@ -107,6 +170,7 @@ def buscar_por_nombre(nombre):
 
 # ✔ Buscar por código de barras
 @app.route("/productos/barcode/<codigo>", methods=["GET"])
+@token_required # <- autenticación
 def buscar_por_codigo(codigo):
 
     producto = inventario.buscar_por_codigo_barras(codigo)
@@ -119,6 +183,7 @@ def buscar_por_codigo(codigo):
 
 # ✔ PUT total
 @app.route("/productos/<sku>", methods=["PUT"])
+@token_required # <- autenticación
 def actualizar_total(sku):
 
     data = request.get_json()
@@ -133,6 +198,7 @@ def actualizar_total(sku):
 
 # ✔ PATCH parcial
 @app.route("/productos/<sku>", methods=["PATCH"])
+@token_required # <- autenticación
 def actualizar_parcial(sku):
 
     data = request.get_json()
@@ -146,6 +212,7 @@ def actualizar_parcial(sku):
 
 # ✔ PATCH alta lógica
 @app.route("/productos/<sku>/alta", methods=["PATCH"])
+@token_required # <- autenticación
 def dar_de_alta(sku):
 
     activado = inventario.activar_producto(sku)
@@ -157,6 +224,7 @@ def dar_de_alta(sku):
 
 # ✔ PATCH baja lógica
 @app.route("/productos/<sku>/baja", methods=["PATCH"])
+@token_required # <- autenticación
 def dar_de_baja(sku):
 
     eliminado = inventario.desactivar_producto(sku)
@@ -173,16 +241,19 @@ def dar_de_baja(sku):
 
 # ✔ Registrar movimiento
 @app.route("/movimientos", methods=["POST"])
+@token_required # <- autenticación
 def registrar_movimiento():
 
     try:
         data = request.get_json()
 
+        user = request.user
         resultado = inventario.registrar_movimiento(
             sku=data["sku"],
             tipo=data["tipo"],
             cantidad=int(data["cantidad"]),
-            motivo=data.get("motivo", "")
+            motivo=data.get("motivo", ""),
+            usuario_id=user["user_id"]
         )
 
         if not resultado:
@@ -199,6 +270,7 @@ def registrar_movimiento():
 
 # ✔ Ver Kardex
 @app.route("/productos/<sku>/movimientos", methods=["GET"])
+@token_required # <- autenticación
 def ver_movimientos(sku):
 
     movimientos = inventario.obtener_movimientos_por_sku(sku)
@@ -211,6 +283,7 @@ def ver_movimientos(sku):
 # ======================================================
 
 @app.route("/dashboard/resumen", methods=["GET"])
+@token_required # <- autenticación
 def dashboard():
 
     resumen = inventario.obtener_resumen_dashboard()
@@ -221,6 +294,7 @@ def dashboard():
 # REPORTE INVENTARIO EXCEL
 # ======================================================
 @app.route("/reportes/inventario/excel", methods=["GET"])
+@token_required # <- autenticación
 def descargar_excel_inventario():
 
     archivo_excel = excel_service.generar_excel_en_memoria()

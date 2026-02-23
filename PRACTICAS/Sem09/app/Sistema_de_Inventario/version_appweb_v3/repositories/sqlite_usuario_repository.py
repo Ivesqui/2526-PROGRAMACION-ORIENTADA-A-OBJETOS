@@ -40,7 +40,11 @@ class SqliteUsuarioRepository:
         ))
 
         conn.commit()
+
+        usuario._Usuario__id = cursor.lastrowid
         conn.close()
+
+        return usuario
 
     # ======================================================
     # OBTENER POR EMAIL
