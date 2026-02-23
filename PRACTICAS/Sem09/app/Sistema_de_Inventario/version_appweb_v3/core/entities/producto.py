@@ -96,3 +96,15 @@ class Producto:
 
     @property
     def fecha_actualizacion(self): return self.__fecha_actualizacion
+
+    @fecha_creacion.setter
+    def fecha_creacion(self, value):
+        self.__fecha_creacion = value
+
+    @fecha_actualizacion.setter
+    def fecha_actualizacion(self, value):
+        self.__fecha_actualizacion = value
+
+    @activo.setter
+    def activo(self, value):
+        self.__activo = value
