@@ -8,9 +8,10 @@ def mostrar_menu():
     1. Registrar producto
     2. Dar de baja producto
     3. Actualizar stock / precios
-    4. Buscar producto
-    5. Listar inventario
-    6. Salir
+    4. Buscar producto por sku
+    5. Listar todos los productos activos
+    6. Listar todos los productos desactivados.
+    7. Salir
     """)
 
 
@@ -107,27 +108,41 @@ def ejecutar_menu():
                     )
 
         # ======================================================
-        # 5. LISTAR INVENTARIO
+        # 5. LISTAR PRODUCTOS ACTIVOS
         # ======================================================
         elif opcion == "5":
-            productos = inventario.listar_productos()
+            productos = inventario.listar_activos()
 
             if not productos:
-                print("Inventario vacío")
+                print("No hay productos activos")
             else:
                 for p in productos:
-                    estado = "ACTIVO" if p.esta_activo() else "INACTIVO"
                     print(
                         f"{p.get_sku()} | {p.get_nombre_producto()} | "
                         f"Stock: {p.get_stock_actual()} | "
-                        f"Mín: {p.get_stock_minimo()} | "
-                        f"{estado}"
+                        f"Mín: {p.get_stock_minimo()} | ACTIVO"
+                    )
+
+        # ======================================================
+        # 6. LISTAR PRODUCTOS INACTIVOS
+        # ======================================================
+        elif opcion == "6":
+            productos = inventario.listar_inactivos()
+
+            if not productos:
+                print("No hay productos inactivos")
+            else:
+                for p in productos:
+                    print(
+                        f"{p.get_sku()} | {p.get_nombre_producto()} | "
+                        f"Stock: {p.get_stock_actual()} | "
+                        f"Mín: {p.get_stock_minimo()} | INACTIVO"
                     )
 
         # ======================================================
         # 6. SALIR
         # ======================================================
-        elif opcion == "6":
+        elif opcion == "7":
             print("Saliendo del sistema...")
             break
 

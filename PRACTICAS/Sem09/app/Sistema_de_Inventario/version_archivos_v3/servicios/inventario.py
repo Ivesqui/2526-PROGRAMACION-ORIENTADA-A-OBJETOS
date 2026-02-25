@@ -121,10 +121,22 @@ class Inventario:
         return False
 
     # ======================================================
-    # LISTAR PRODUCTOS
+    # LISTAR PRODUCTOS ACTIVOS
     # ======================================================
-    def listar_productos(self):
-        return list(self.__productos.values())
+    def listar_activos(self):
+        return [
+            p for p in self.__productos.values()
+            if p.esta_activo()
+        ]
+
+    # ======================================================
+    # LISTAR PRODUCTOS INACTIVOS
+    # ======================================================
+    def listar_inactivos(self):
+        return [
+            p for p in self.__productos.values()
+            if not p.esta_activo()
+        ]
 
     # ======================================================
     # BUSCAR PRODUCTO
@@ -134,6 +146,8 @@ class Inventario:
 
         return [
             p for p in self.__productos.values()
-            if texto in p.get_sku().lower()
-               or texto in p.get_nombre_producto().lower()
+            if p.esta_activo() and (
+                    texto in p.get_sku().lower()
+                    or texto in p.get_nombre_producto().lower()
+            )
         ]
