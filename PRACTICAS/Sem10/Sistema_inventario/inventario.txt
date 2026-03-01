@@ -1,0 +1,2 @@
+ALM-001|Arroz|Alimentos|kg|1.2|1.5|50|10|True
+LIM-002|Cloro doméstico 1L|Limpieza|botella|0.8|1.2|25|5|False
