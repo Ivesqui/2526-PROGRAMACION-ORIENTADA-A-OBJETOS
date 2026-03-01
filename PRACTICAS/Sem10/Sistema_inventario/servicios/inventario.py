@@ -167,6 +167,34 @@ class Inventario:
             producto._Producto__activo = True
             return False
 
+    def eliminar_producto(self, sku):
+        """
+        Elimina completamente un producto del inventario
+        (eliminación física, no lógica).
+
+        Retorna:
+            True  -> eliminado y guardado correctamente
+            False -> no existe o error de escritura
+        """
+
+        # Verificamos si el producto existe
+        if sku not in self.__productos:
+            return False
+
+        # Guardamos el producto por seguridad (por si hay que revertir)
+        producto_eliminado = self.__productos[sku]
+
+        # Eliminamos de memoria
+        del self.__productos[sku]
+
+        # Intentamos guardar cambios en archivo
+        if self.guardar_en_archivo():
+            return True
+        else:
+            # Si falla la escritura, revertimos el cambio
+            self.__productos[sku] = producto_eliminado
+            return False
+
     def actualizar_producto(self, sku, stock=None, precio_compra=None, precio_venta=None):
         """
         Actualiza datos de un producto activo.
