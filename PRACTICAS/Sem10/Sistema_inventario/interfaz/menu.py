@@ -15,7 +15,8 @@ def mostrar_menu():
     4. Buscar producto por SKU o nombre
     5. Listar todos los productos activos
     6. Listar todos los productos desactivados
-    7. Salir
+    7. Eliminar producto definitivamente
+    8. Salir
     """)
 
 
@@ -82,7 +83,7 @@ def ejecutar_menu():
 
             except ValueError as e:
                 # Captura errores de conversión numérica o validaciones del Producto
-                print(f"❌ Error en los datos ingresados: {e}")
+                print(f" Error en los datos ingresados: {e}")
 
         # ======================================================
         # 2. DAR DE BAJA PRODUCTO
@@ -94,7 +95,7 @@ def ejecutar_menu():
             resultado = inventario.desactivar_producto(sku)
 
             if resultado:
-                print("✅ Producto desactivado y cambios guardados correctamente.")
+                print("Producto desactivado y cambios guardados correctamente.")
             else:
                 print("   No se pudo desactivar el producto.")
                 print("   Posibles causas:")
@@ -125,7 +126,7 @@ def ejecutar_menu():
                 )
 
                 if actualizado:
-                    print("✅ Producto actualizado y cambios guardados correctamente.")
+                    print("Producto actualizado y cambios guardados correctamente.")
                 else:
                     print("   No se pudo actualizar el producto.")
                     print("   Posibles causas:")
@@ -147,7 +148,7 @@ def ejecutar_menu():
             productos = inventario.buscar_producto(texto)
 
             if not productos:
-                print("⚠ No se encontraron productos activos con ese criterio.")
+                print("No se encontraron productos activos con ese criterio.")
             else:
                 print("\nResultados encontrados:")
                 for p in productos:
@@ -165,7 +166,7 @@ def ejecutar_menu():
             productos = inventario.listar_activos()
 
             if not productos:
-                print("⚠ No hay productos activos en el sistema.")
+                print("No hay productos activos en el sistema.")
             else:
                 print("\nListado de productos activos:")
                 for p in productos:
@@ -194,9 +195,39 @@ def ejecutar_menu():
                     )
 
         # ======================================================
-        # 7. SALIR DEL SISTEMA
+        # 7. ELIMINAR PRODUCTO DEFINITIVAMENTE (DELETE)
         # ======================================================
         elif opcion == "7":
+
+            # Se solicita el SKU del producto a eliminar
+            sku = input("SKU del producto a eliminar definitivamente: ").strip()
+
+            # Confirmación de seguridad para evitar borrados accidentales
+            confirmacion = input(
+                "¿Está seguro que desea eliminar este producto? (S/N): "
+            ).strip().lower()
+
+            # Solo se ejecuta si el usuario confirma
+            if confirmacion == "s":
+
+                eliminado = inventario.eliminar_producto(sku)
+
+                if eliminado:
+                    print("Producto eliminado permanentemente del sistema.")
+                else:
+                    print("   No se pudo eliminar el producto.")
+                    print("   Posibles causas:")
+                    print("   - El SKU no existe.")
+                    print("   - Error al escribir en el archivo.")
+
+            else:
+                print("Operación cancelada por el usuario.")
+
+
+        # ======================================================
+        # 8. SALIR DEL SISTEMA
+        # ======================================================
+        elif opcion == "8":
 
             print("Saliendo del sistema...")
             break  # Termina el ciclo while
