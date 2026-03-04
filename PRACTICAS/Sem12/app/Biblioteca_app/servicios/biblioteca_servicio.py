@@ -14,20 +14,12 @@ from modelos.usuario import Usuario
 
 
 class BibliotecaServicio:
-    """
-    Clase que gestiona la biblioteca.
-    """
 
     def __init__(self):
-        # Diccionario requerido:
-        # Clave: ISBN
-        # Valor: Objeto Libro
-        self._libros_disponibles = {}
+        # Ahora tenemos un catálogo general
+        self._catalogo = {}
 
-        # Diccionario para almacenar usuarios
         self._usuarios = {}
-
-        # Set requerido para garantizar IDs únicos
         self._ids_usuarios = set()
 
     # =========================
@@ -35,22 +27,23 @@ class BibliotecaServicio:
     # =========================
 
     def anadir_libro(self, titulo, autor, categoria, isbn, anio_publicacion):
-        if isbn in self._libros_disponibles:
+        if isbn in self._catalogo:
             return "El libro ya existe."
 
-        # Se pasa ahora el año al constructor
         libro = Libro(titulo, autor, categoria, isbn, anio_publicacion)
-        self._libros_disponibles[isbn] = libro
+        self._catalogo[isbn] = libro
         return "Libro añadido correctamente."
 
     def quitar_libro(self, isbn):
-        if isbn in self._libros_disponibles:
-            del self._libros_disponibles[isbn]
+        if isbn in self._catalogo:
+            if self._catalogo[isbn].obtener_estado() == "Prestado":
+                return "No se puede eliminar un libro prestado."
+            del self._catalogo[isbn]
             return "Libro eliminado."
         return "Libro no encontrado."
 
     # =========================
-    # Gestión de Usuarios
+    # Usuarios
     # =========================
 
     def registrar_usuario(self, nombre, user_id):
@@ -77,13 +70,19 @@ class BibliotecaServicio:
         if user_id not in self._usuarios:
             return "Usuario no encontrado."
 
-        if isbn not in self._libros_disponibles:
-            return "Libro no disponible."
+        if isbn not in self._catalogo:
+            return "Libro no encontrado."
+
+        libro = self._catalogo[isbn]
+
+        if libro.obtener_estado() == "Prestado":
+            return "El libro ya está prestado."
 
         usuario = self._usuarios[user_id]
-        libro = self._libros_disponibles.pop(isbn)
 
+        libro.prestar()
         usuario.agregar_libro(libro)
+
         return "Préstamo realizado con éxito."
 
     def devolver_libro(self, user_id, isbn):
@@ -94,30 +93,43 @@ class BibliotecaServicio:
         libro = usuario.devolver_libro(isbn)
 
         if libro:
-            self._libros_disponibles[isbn] = libro
+            libro.devolver()
             return "Libro devuelto correctamente."
+
         return "El usuario no tiene ese libro."
 
     # =========================
-    # Búsquedas
+    # Búsquedas (ahora parciales)
     # =========================
 
     def buscar_por_titulo(self, titulo):
+        titulo = titulo.lower()
+
         return [
-            libro for libro in self._libros_disponibles.values()
-            if libro.obtener_titulo().lower() == titulo.lower()
+            libro for libro in self._catalogo.values()
+            if titulo in libro.obtener_titulo().lower()
         ]
 
     def buscar_por_autor(self, autor):
+        autor = autor.lower()
+
         return [
-            libro for libro in self._libros_disponibles.values()
-            if libro.obtener_autor().lower() == autor.lower()
+            libro for libro in self._catalogo.values()
+            if autor in libro.obtener_autor().lower()
         ]
 
     def buscar_por_categoria(self, categoria):
+        categoria = categoria.lower()
+
         return [
-            libro for libro in self._libros_disponibles.values()
-            if libro.obtener_categoria().lower() == categoria.lower()
+            libro for libro in self._catalogo.values()
+            if categoria in libro.obtener_categoria().lower()
+        ]
+
+    def buscar_por_anio(self, anio):
+        return [
+            libro for libro in self._catalogo.values()
+            if libro.obtener_anio_publicacion() == anio
         ]
 
     def listar_libros_usuario(self, user_id):
