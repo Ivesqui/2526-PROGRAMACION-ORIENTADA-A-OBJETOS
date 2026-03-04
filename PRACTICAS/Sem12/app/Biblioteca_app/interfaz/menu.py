@@ -19,7 +19,7 @@ class Menu:
         self._servicio = servicio
 
     def mostrar_menu(self):
-        print("\n===== BIBLIOTECA DIGITAL =====")
+        print("\n===== BIBLIOTECA DIGITAL UEA =====")
         print("1. Añadir libro")
         print("2. Quitar libro")
         print("3. Registrar usuario")
