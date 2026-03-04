@@ -12,7 +12,7 @@ class Libro:
     Clase que representa un libro en la biblioteca.
     """
 
-    def __init__(self, titulo: str, autor: str, categoria: str, isbn: str):
+    def __init__(self, titulo: str, autor: str, categoria: str, isbn: str, anio_publicacion: int):
         """
         Constructor de la clase Libro.
 
@@ -28,6 +28,9 @@ class Libro:
 
         # ISBN único del libro
         self._isbn = isbn
+
+        # Año de publicación
+        self._anio_publicacion = anio_publicacion
 
     # =========================
     # Métodos GET (Encapsulamiento)
@@ -45,8 +48,17 @@ class Libro:
     def obtener_isbn(self):
         return self._isbn
 
+    def obtener_anio_publicacion(self):
+        return self._anio_publicacion
+
     def __str__(self):
         """
         Representación amigable del objeto.
         """
-        return f"Título: {self.obtener_titulo()} | Autor: {self.obtener_autor()} | Categoría: {self._categoria} | ISBN: {self._isbn}"
+        return (
+            f"Título: {self.obtener_titulo()} | "
+            f"Autor: {self.obtener_autor()} | "
+            f"Categoría: {self._categoria} | "
+            f"ISBN: {self._isbn} | "
+            f"Año: {self._anio_publicacion}"
+        )
