@@ -1,39 +1,29 @@
 """
 modelo/libro.py
 
-Este módulo define la clase Libro.
-Representa la entidad Libro dentro del sistema.
-NO contiene lógica de negocio.
-Solo define estructura y comportamiento propio del objeto.
+Clase Libro mejorada con manejo de estado.
 """
 
 class Libro:
     """
-    Clase que representa un libro en la biblioteca.
+    Representa un libro dentro del sistema.
     """
 
     def __init__(self, titulo: str, autor: str, categoria: str, isbn: str, anio_publicacion: int):
-        """
-        Constructor de la clase Libro.
 
-        Requisito técnico:
-        - Título y autor deben almacenarse en una TUPLA (inmutable).
-        """
-
-        # Tupla inmutable que almacena (titulo, autor)
+        # Tupla inmutable (requisito)
         self._info = (titulo, autor)
 
-        # Categoría del libro
         self._categoria = categoria
-
-        # ISBN único del libro
         self._isbn = isbn
-
-        # Año de publicación
         self._anio_publicacion = anio_publicacion
 
+        # Nuevo atributo: estado del libro
+        # Estado inicial siempre será "Disponible"
+        self._estado = "Disponible"
+
     # =========================
-    # Métodos GET (Encapsulamiento)
+    # GETTERS
     # =========================
 
     def obtener_titulo(self):
@@ -51,14 +41,25 @@ class Libro:
     def obtener_anio_publicacion(self):
         return self._anio_publicacion
 
+    def obtener_estado(self):
+        return self._estado
+
+    # =========================
+    # Métodos para cambiar estado
+    # =========================
+
+    def prestar(self):
+        self._estado = "Prestado"
+
+    def devolver(self):
+        self._estado = "Disponible"
+
     def __str__(self):
-        """
-        Representación amigable del objeto.
-        """
         return (
             f"Título: {self.obtener_titulo()} | "
             f"Autor: {self.obtener_autor()} | "
             f"Categoría: {self._categoria} | "
             f"ISBN: {self._isbn} | "
-            f"Año: {self._anio_publicacion}"
+            f"Año: {self._anio_publicacion} | "
+            f"Estado: {self._estado}"
         )
