@@ -2,11 +2,7 @@
 # IMPORTACIONES
 # ======================================================
 
-# Se importa la clase Producto
 from modelos.producto import Producto
-
-# Se importa el módulo json para serialización estructurada
-import json
 
 
 # ======================================================
@@ -14,89 +10,62 @@ import json
 # ======================================================
 class Inventario:
     """
-    Clase encargada de gestionar el inventario.
-
-    Implementa:
-    - Diccionario para almacenamiento principal.
-    - Conjunto (set) para control de IDs únicos.
-    - Listas para resultados filtrados.
-    - Persistencia mediante JSON.
+    Gestiona el inventario usando:
+    - Diccionario (almacenamiento principal)
+    - Set (control de SKUs únicos)
+    - Listas (resultados)
+    - Archivo TXT plano (sin formato JSON)
     """
 
     # ======================================================
     # CONSTRUCTOR
     # ======================================================
     def __init__(self):
-        """
-        Inicializa:
-        - Archivo JSON de almacenamiento.
-        - Diccionario de productos.
-        - Set de SKUs únicos.
-        - Carga automática desde archivo.
-        """
-        self.__archivo = "inventario.json"
 
-        # Diccionario principal:
-        # clave = SKU
-        # valor = objeto Producto
+        self.__archivo = "inventario.txt"
+
         self.__productos = {}
-
-        # Set para control eficiente de SKUs únicos
         self.__skus = set()
 
-        # Carga datos al iniciar
         self.cargar_desde_archivo()
 
-
     # ======================================================
-    # SERIALIZACIÓN A DICCIONARIO
+    # GUARDAR EN ARCHIVO (FORMATO PLANO)
     # ======================================================
-    def __producto_a_dict(self, producto):
+    def guardar_en_archivo(self):
         """
-        Convierte un objeto Producto a diccionario
-        para poder guardarlo en formato JSON.
+        Guarda cada producto en una línea
+        separando atributos con |
         """
-        return {
-            "sku": producto.get_sku(),
-            "nombre_producto": producto.get_nombre_producto(),
-            "categoria": producto.get_categoria(),
-            "unidad": producto.get_unidad(),
-            "precio_compra": producto.get_precio_compra(),
-            "precio_venta": producto.get_precio_venta(),
-            "stock_actual": producto.get_stock_actual(),
-            "stock_minimo": producto.get_stock_minimo(),
-            "activo": producto.esta_activo()
-        }
 
+        try:
+            with open(self.__archivo, "w", encoding="utf-8") as archivo:
+
+                for p in self.__productos.values():
+                    linea = (
+                        f"{p.get_sku()}|"
+                        f"{p.get_nombre_producto()}|"
+                        f"{p.get_categoria()}|"
+                        f"{p.get_unidad()}|"
+                        f"{p.get_precio_compra()}|"
+                        f"{p.get_precio_venta()}|"
+                        f"{p.get_stock_actual()}|"
+                        f"{p.get_stock_minimo()}|"
+                        f"{p.esta_activo()}\n"
+                    )
+
+                    archivo.write(linea)
+
+        except Exception as e:
+            print("Error al guardar archivo:", e)
 
     # ======================================================
-    # DESERIALIZACIÓN DESDE DICCIONARIO
-    # ======================================================
-    def __dict_a_producto(self, datos):
-        """
-        Convierte un diccionario cargado desde JSON
-        nuevamente en un objeto Producto.
-        """
-        return Producto(
-            sku=datos["sku"],
-            nombre_producto=datos["nombre_producto"],
-            categoria=datos["categoria"],
-            unidad=datos["unidad"],
-            precio_compra=datos["precio_compra"],
-            precio_venta=datos["precio_venta"],
-            stock_actual=datos["stock_actual"],
-            stock_minimo=datos["stock_minimo"],
-            activo=datos["activo"]
-        )
-
-
-    # ======================================================
-    # CARGAR DESDE ARCHIVO JSON
+    # CARGAR DESDE ARCHIVO
     # ======================================================
     def cargar_desde_archivo(self):
         """
-        Lee el archivo JSON y reconstruye
-        el inventario en memoria.
+        Lee el archivo línea por línea
+        y reconstruye los objetos Producto.
         """
 
         self.__productos.clear()
@@ -104,57 +73,39 @@ class Inventario:
 
         try:
             with open(self.__archivo, "r", encoding="utf-8") as archivo:
-                datos = json.load(archivo)
 
-                for item in datos:
-                    producto = self.__dict_a_producto(item)
+                for linea in archivo:
+                    datos = linea.strip().split("|")
 
-                    self.__productos[producto.get_sku()] = producto
-                    self.__skus.add(producto.get_sku())
+                    if len(datos) == 9:
+
+                        producto = Producto(
+                            sku=datos[0],
+                            nombre_producto=datos[1],
+                            categoria=datos[2],
+                            unidad=datos[3],
+                            precio_compra=float(datos[4]),
+                            precio_venta=float(datos[5]),
+                            stock_actual=int(datos[6]),
+                            stock_minimo=int(datos[7]),
+                            activo=datos[8] == "True"
+                        )
+
+                        self.__productos[producto.get_sku()] = producto
+                        self.__skus.add(producto.get_sku())
 
         except FileNotFoundError:
-            # Si no existe el archivo, lo crea vacío
-            with open(self.__archivo, "w", encoding="utf-8") as archivo:
-                json.dump([], archivo)
+            # Si no existe, lo crea vacío
+            with open(self.__archivo, "w", encoding="utf-8"):
+                pass
 
         except Exception as e:
             print("Error al cargar archivo:", e)
-
-
-    # ======================================================
-    # GUARDAR EN ARCHIVO JSON
-    # ======================================================
-    def guardar_en_archivo(self):
-        """
-        Serializa el inventario completo
-        y lo guarda en formato JSON.
-        """
-
-        try:
-            with open(self.__archivo, "w", encoding="utf-8") as archivo:
-
-                # Lista de productos serializados
-                lista_productos = [
-                    self.__producto_a_dict(p)
-                    for p in self.__productos.values()
-                ]
-
-                json.dump(lista_productos, archivo, indent=4)
-
-        except Exception as e:
-            print("Error al guardar archivo:", e)
-
 
     # ======================================================
     # AGREGAR PRODUCTO
     # ======================================================
     def agregar_producto(self, producto: Producto):
-        """
-        Agrega un nuevo producto.
-
-        Utiliza el set para verificar
-        unicidad del SKU.
-        """
 
         if producto.get_sku() in self.__skus:
             return False
@@ -165,15 +116,10 @@ class Inventario:
         self.guardar_en_archivo()
         return True
 
-
     # ======================================================
-    # ELIMINACIÓN FÍSICA DEL PRODUCTO
+    # ELIMINACIÓN FÍSICA
     # ======================================================
     def eliminar_producto(self, sku):
-        """
-        Elimina completamente un producto
-        del inventario.
-        """
 
         if sku in self.__productos:
             del self.__productos[sku]
@@ -183,7 +129,6 @@ class Inventario:
             return True
 
         return False
-
 
     # ======================================================
     # ACTUALIZAR PRODUCTO
@@ -207,15 +152,10 @@ class Inventario:
 
         return False
 
-
     # ======================================================
-    # BUSCAR PRODUCTOS POR NOMBRE
+    # BUSCAR
     # ======================================================
     def buscar_producto(self, texto):
-        """
-        Retorna una lista de productos
-        que coincidan con el texto.
-        """
 
         texto = texto.lower()
 
@@ -224,13 +164,8 @@ class Inventario:
             if texto in p.get_nombre_producto().lower()
         ]
 
-
     # ======================================================
-    # LISTAR TODOS LOS PRODUCTOS
+    # LISTAR TODOS
     # ======================================================
     def listar_todos(self):
-        """
-        Retorna una lista con todos los productos.
-        """
-
         return list(self.__productos.values())
