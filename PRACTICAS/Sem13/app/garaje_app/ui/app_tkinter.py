@@ -56,7 +56,7 @@ class AppGaraje:
 
         # Título
         titulo = ttk.Label(main_frame,
-                           text="🚗 Sistema de Gestión de Garaje",
+                           text="Sistema de Gestión de Garaje",
                            style='Title.TLabel')
         titulo.grid(row=0, column=0, columnspan=2, pady=(0, 20))
 
