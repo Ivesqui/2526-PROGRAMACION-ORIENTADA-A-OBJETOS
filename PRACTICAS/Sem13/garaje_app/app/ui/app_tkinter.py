@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from typing import List
 import sys
 from pathlib import Path
 
@@ -24,7 +23,6 @@ class AppGaraje:
         self.root.title("Sistema de Gestión de Garaje")
         self.root.geometry("700x550")
         self.root.resizable(False, False)
-
         # Configurar estilo
         self.configurar_estilos()
 
@@ -110,12 +108,26 @@ class AppGaraje:
                                  command=self.agregar_vehiculo)
         btn_agregar.grid(row=0, column=0, padx=5)
 
+        # Botón Eliminar
+        btn_eliminar = ttk.Button(button_frame,
+                                  text="❌ Eliminar Vehículo",
+                                  style='Action.TButton',
+                                  command=self.eliminar_vehiculo)
+        btn_eliminar.grid(row=0, column=1, padx=5)
+
+        # Botón Exportar
+        btn_exportar = ttk.Button(button_frame,
+                                  text="💾 Exportar TXT",
+                                  style='Action.TButton',
+                                  command=self.exportar_txt)
+        btn_exportar.grid(row=0, column=2, padx=5)
+
         # Botón Limpiar
         btn_limpiar = ttk.Button(button_frame,
                                  text="🗑️ Limpiar",
                                  style='Action.TButton',
                                  command=self.limpiar_campos)
-        btn_limpiar.grid(row=0, column=1, padx=5)
+        btn_limpiar.grid(row=0, column=3, padx=5)
 
     def crear_tabla_vehiculos(self, parent):
         """Crea la tabla para mostrar los vehículos registrados."""
@@ -181,9 +193,27 @@ class AppGaraje:
             messagebox.showerror("Error",
                                  f"La placa {placa} ya está registrada.")
 
+    def eliminar_vehiculo(self):
+        """Elimina el vehículo seleccionado de la tabla."""
+        seleccionado = self.tree.selection()
+
+        if not seleccionado:
+            messagebox.showwarning("Selección requerida",
+                                   "Seleccione un vehículo para eliminar.")
+            return
+
+        confirmacion = messagebox.askyesno(
+            "Confirmar",
+            "¿Está seguro de eliminar el vehículo seleccionado?"
+        )
+
+        if confirmacion:
+            for item in seleccionado:
+                self.tree.delete(item)
     def limpiar_campos(self):
         """Limpia todos los campos del formulario."""
         self.entry_placa.delete(0, tk.END)
         self.entry_marca.delete(0, tk.END)
         self.entry_propietario.delete(0, tk.END)
         self.entry_placa.focus()
+
