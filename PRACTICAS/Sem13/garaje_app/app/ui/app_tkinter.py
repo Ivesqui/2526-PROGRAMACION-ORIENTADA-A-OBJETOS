@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import sys
 from pathlib import Path
+import re
+
 
 # Agregar el directorio raíz al path para importaciones
 sys.path.insert(0, str(Path(__file__).parent))
@@ -161,39 +163,62 @@ class AppGaraje:
         self.tree.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
 
+    # Validaciones
+
+    def validar_placa(self, placa):
+        """
+        Valida formato de placa ecuatoriana: ABC-1234
+        """
+        patron = r'^[A-Z]{3}-\d{4}$'
+        return re.match(patron, placa.upper())
+
+
     # Agregar vehículos al listado
     def agregar_vehiculo(self):
         """Maneja el evento de agregar un vehículo."""
-        placa = self.entry_placa.get().strip()
+
+        #Forzamos la entrada de mayúsculas automáticamente
+        placa = self.entry_placa.bind("<KeyRelease>", lambda e: self.entry_placa.insert(0, self.entry_placa.get().upper()))
         marca = self.entry_marca.get().strip()
         propietario = self.entry_propietario.get().strip()
 
-        # Validaciones
+        # Validar campos vacíos
         if not placa or not marca or not propietario:
-            messagebox.showwarning("Campos vacíos",
-                                   "Por favor, complete todos los campos.")
+            messagebox.showwarning(
+                "Campos vacíos",
+                "Todos los campos son obligatorios."
+            )
             return
 
-        # Crear vehículo y agregarlo
+        # Validar formato de placa
+        if not self.validar_placa(placa):
+            messagebox.showerror(
+                "Placa inválida",
+                "Formato de placa incorrecto.\nDebe ser: ABC-1234"
+            )
+            return
+
         vehiculo = Vehiculo(placa, marca, propietario)
 
         if self.servicio.agregar_vehiculo(vehiculo):
-            # Agregar a la tabla
+
             self.tree.insert('', tk.END,
                              values=(vehiculo.placa,
                                      vehiculo.marca,
                                      vehiculo.propietario))
 
-            # Limpiar campos
             self.limpiar_campos()
 
-            # Mensaje de éxito
-            messagebox.showinfo("Éxito",
-                                f"Vehículo {placa} registrado correctamente.")
-        else:
-            messagebox.showerror("Error",
-                                 f"La placa {placa} ya está registrada.")
+            messagebox.showinfo(
+                "Éxito",
+                f"Vehículo {placa} registrado correctamente."
+            )
 
+        else:
+            messagebox.showerror(
+                "Error",
+                f"La placa {placa} ya está registrada."
+            )
     # Eliminar vehículos del listado
     def eliminar_vehiculo(self):
         """Elimina el vehículo seleccionado de la tabla."""
@@ -247,3 +272,5 @@ class AppGaraje:
 
         except Exception as e:
             messagebox.showerror("Error", str(e))
+
+
