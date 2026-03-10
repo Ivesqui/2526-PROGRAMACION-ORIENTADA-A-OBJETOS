@@ -66,15 +66,18 @@ class GarajeServicio:
     def eliminar_vehiculo(self, placa: str) -> bool:
         """
         Elimina un vehículo del garaje por su placa.
-
-        Args:
-            placa: Placa del vehículo a eliminar
-
-        Returns:
-            True si se eliminó, False si no se encontró
         """
-        vehiculo = self.buscar_por_placa(placa)
-        if vehiculo:
-            self._vehiculos.remove(vehiculo)
-            return True
+        placa_upper = placa.upper()
+
+        # Recorremos la lista interna de vehículos registrados
+        # y comparamos cada placa con la placa que queremos eliminar.
+        # Usamos upper() para evitar problemas de mayúsculas/minúsculas.
+        for vehiculo in self._vehiculos:
+            if vehiculo.placa.upper() == placa_upper:
+                # Si encontramos coincidencia, eliminamos ese vehículo de la lista
+                self._vehiculos.remove(vehiculo)
+                return True
+
+        # Si terminamos el recorrido y no encontramos la placa,
+        # significa que el vehículo no estaba registrado
         return False

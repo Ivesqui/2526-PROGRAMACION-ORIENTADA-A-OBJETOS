@@ -238,12 +238,14 @@ class AppGaraje:
 
     # Eliminar vehículos del listado
     def eliminar_vehiculo(self):
-        """Elimina el vehículo seleccionado de la tabla."""
+        """Elimina el vehículo seleccionado de la tabla y del servicio."""
         seleccionado = self.tree.selection()
 
         if not seleccionado:
-            messagebox.showwarning("Selección requerida",
-                                   "Seleccione un vehículo para eliminar.")
+            messagebox.showwarning(
+                "Selección requerida",
+                "Seleccione un vehículo para eliminar."
+            )
             return
 
         confirmacion = messagebox.askyesno(
@@ -253,6 +255,13 @@ class AppGaraje:
 
         if confirmacion:
             for item in seleccionado:
+                # obtener datos de la fila
+                placa, marca, propietario = self.tree.item(item)["values"]
+
+                # eliminar del servicio
+                self.servicio.eliminar_vehiculo(placa)
+
+                # eliminar del Treeview
                 self.tree.delete(item)
 
     # Limpiar campos de los inputs
