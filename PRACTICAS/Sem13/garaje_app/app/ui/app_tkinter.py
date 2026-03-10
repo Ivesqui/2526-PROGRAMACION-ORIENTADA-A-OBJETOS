@@ -83,6 +83,7 @@ class AppGaraje:
                                                 sticky=tk.W, pady=5)
         self.entry_placa = ttk.Entry(form_frame, width=30, font=('Arial', 10))
         self.entry_placa.grid(row=0, column=1, padx=(10, 0), pady=5, sticky=tk.W)
+        self.entry_placa.bind("<KeyRelease>", self.formatear_placa)
 
         # Marca
         ttk.Label(form_frame, text="Marca:",
@@ -97,6 +98,26 @@ class AppGaraje:
                                                 sticky=tk.W, pady=5)
         self.entry_propietario = ttk.Entry(form_frame, width=30, font=('Arial', 10))
         self.entry_propietario.grid(row=2, column=1, padx=(10, 0), pady=5, sticky=tk.W)
+
+    # Formato para la placa
+
+    def formatear_placa(self, event):
+        texto = self.entry_placa.get().upper()[:8]
+
+        posicion = self.entry_placa.index(tk.INSERT)
+
+        self.entry_placa.delete(0, tk.END)
+        self.entry_placa.insert(0, texto)
+
+        self.entry_placa.icursor(posicion)
+
+    # Validación en el formulario
+
+    def validar_placa(self, placa):
+        patron = r'^[A-Z]{3}-\d{4}$'
+        return re.fullmatch(patron, placa)
+
+    # Crear los botones
 
     def crear_botones(self, parent):
         """Crea los botones de acción."""
@@ -163,22 +184,12 @@ class AppGaraje:
         self.tree.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
 
-    # Validaciones
-
-    def validar_placa(self, placa):
-        """
-        Valida formato de placa ecuatoriana: ABC-1234
-        """
-        patron = r'^[A-Z]{3}-\d{4}$'
-        return re.match(patron, placa.upper())
-
 
     # Agregar vehículos al listado
-    def agregar_vehiculo(self):
-        """Maneja el evento de agregar un vehículo."""
 
-        #Forzamos la entrada de mayúsculas automáticamente
-        placa = self.entry_placa.bind("<KeyRelease>", lambda e: self.entry_placa.insert(0, self.entry_placa.get().upper()))
+    def agregar_vehiculo(self):
+
+        placa = self.entry_placa.get().strip().upper()
         marca = self.entry_marca.get().strip()
         propietario = self.entry_propietario.get().strip()
 
@@ -194,19 +205,24 @@ class AppGaraje:
         if not self.validar_placa(placa):
             messagebox.showerror(
                 "Placa inválida",
-                "Formato de placa incorrecto.\nDebe ser: ABC-1234"
+                "Formato incorrecto.\nDebe ser: ABC-1234"
             )
             return
 
+        # Crear objeto vehículo
         vehiculo = Vehiculo(placa, marca, propietario)
 
+        # Guardar usando el servicio
         if self.servicio.agregar_vehiculo(vehiculo):
 
-            self.tree.insert('', tk.END,
-                             values=(vehiculo.placa,
-                                     vehiculo.marca,
-                                     vehiculo.propietario))
+            # Insertar en la tabla
+            self.tree.insert(
+                '',
+                tk.END,
+                values=(vehiculo.placa, vehiculo.marca, vehiculo.propietario)
+            )
 
+            # Limpiar formulario
             self.limpiar_campos()
 
             messagebox.showinfo(
@@ -219,6 +235,7 @@ class AppGaraje:
                 "Error",
                 f"La placa {placa} ya está registrada."
             )
+
     # Eliminar vehículos del listado
     def eliminar_vehiculo(self):
         """Elimina el vehículo seleccionado de la tabla."""
@@ -272,5 +289,4 @@ class AppGaraje:
 
         except Exception as e:
             messagebox.showerror("Error", str(e))
-
 
