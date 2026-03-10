@@ -115,19 +115,19 @@ class AppGaraje:
                                   command=self.eliminar_vehiculo)
         btn_eliminar.grid(row=0, column=1, padx=5)
 
-        # Botón Exportar
-        btn_exportar = ttk.Button(button_frame,
-                                  text="💾 Exportar TXT",
-                                  style='Action.TButton',
-                                  command=self.exportar_txt)
-        btn_exportar.grid(row=0, column=2, padx=5)
-
         # Botón Limpiar
         btn_limpiar = ttk.Button(button_frame,
                                  text="🗑️ Limpiar",
                                  style='Action.TButton',
                                  command=self.limpiar_campos)
         btn_limpiar.grid(row=0, column=3, padx=5)
+
+        # Botón Exportar
+        btn_exportar = ttk.Button(button_frame,
+                                  text="💾 Exportar TXT",
+                                  style='Action.TButton',
+                                  command=self.exportar_txt)
+        btn_exportar.grid(row=0, column=2, padx=5)
 
     def crear_tabla_vehiculos(self, parent):
         """Crea la tabla para mostrar los vehículos registrados."""
@@ -161,6 +161,7 @@ class AppGaraje:
         self.tree.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
 
+    # Agregar vehículos al listado
     def agregar_vehiculo(self):
         """Maneja el evento de agregar un vehículo."""
         placa = self.entry_placa.get().strip()
@@ -193,6 +194,7 @@ class AppGaraje:
             messagebox.showerror("Error",
                                  f"La placa {placa} ya está registrada.")
 
+    # Eliminar vehículos del listado
     def eliminar_vehiculo(self):
         """Elimina el vehículo seleccionado de la tabla."""
         seleccionado = self.tree.selection()
@@ -210,6 +212,9 @@ class AppGaraje:
         if confirmacion:
             for item in seleccionado:
                 self.tree.delete(item)
+
+    # Limpiar campos de los inputs
+
     def limpiar_campos(self):
         """Limpia todos los campos del formulario."""
         self.entry_placa.delete(0, tk.END)
@@ -217,3 +222,28 @@ class AppGaraje:
         self.entry_propietario.delete(0, tk.END)
         self.entry_placa.focus()
 
+    # Exportar listado de vehículos a .txt
+    def exportar_txt(self):
+        """Exporta la lista de vehículos a un archivo TXT."""
+        vehiculos = self.tree.get_children()
+
+        if not vehiculos:
+            messagebox.showwarning("Lista vacía",
+                                   "No hay vehículos para exportar.")
+            return
+
+        try:
+            with open("vehiculos.txt", "w", encoding="utf-8") as f:
+                f.write("LISTA DE VEHÍCULOS\n")
+                f.write("---------------------------\n")
+
+                for item in vehiculos:
+                    placa, marca, propietario = self.tree.item(item)["values"]
+                    linea = f"Placa: {placa} | Marca: {marca} | Propietario: {propietario}\n"
+                    f.write(linea)
+
+            messagebox.showinfo("Exportación exitosa",
+                                "La lista se guardó como vehiculos.txt")
+
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
