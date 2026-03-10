@@ -1,0 +1,189 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
+from typing import List
+import sys
+from pathlib import Path
+
+# Agregar el directorio raíz al path para importaciones
+sys.path.insert(0, str(Path(__file__).parent))
+
+from servicios.garaje_servicio import GarajeServicio
+from modelos.vehiculo import Vehiculo
+
+
+class AppGaraje:
+    """
+    Interfaz gráfica principal del sistema de gestión de garaje.
+    """
+
+    def __init__(self, root: tk.Tk):
+        self.root = root
+        self.servicio = GarajeServicio()
+
+        # Configuración de la ventana principal
+        self.root.title("Sistema de Gestión de Garaje")
+        self.root.geometry("700x550")
+        self.root.resizable(False, False)
+
+        # Configurar estilo
+        self.configurar_estilos()
+
+        # Crear widgets
+        self.crear_interfaz()
+
+    def configurar_estilos(self):
+        """Configura los estilos visuales de la aplicación."""
+        style = ttk.Style()
+        style.theme_use('clam')
+
+        # Estilos personalizados
+        style.configure('Title.TLabel',
+                        font=('Arial', 18, 'bold'),
+                        foreground='#2c3e50')
+        style.configure('Subtitle.TLabel',
+                        font=('Arial', 10, 'bold'),
+                        foreground='#34495e')
+        style.configure('Action.TButton',
+                        font=('Arial', 10, 'bold'),
+                        padding=10)
+
+    def crear_interfaz(self):
+        """Crea todos los componentes de la interfaz gráfica."""
+
+        # Frame principal
+        main_frame = ttk.Frame(self.root, padding="20")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+        # Título
+        titulo = ttk.Label(main_frame,
+                           text="🚗 Sistema de Gestión de Garaje",
+                           style='Title.TLabel')
+        titulo.grid(row=0, column=0, columnspan=2, pady=(0, 20))
+
+        # Frame de formulario
+        self.crear_formulario(main_frame)
+
+        # Frame de botones
+        self.crear_botones(main_frame)
+
+        # Frame de lista de vehículos
+        self.crear_tabla_vehiculos(main_frame)
+
+    def crear_formulario(self, parent):
+        """Crea el formulario de entrada de datos."""
+        form_frame = ttk.LabelFrame(parent,
+                                    text="Información del Vehículo",
+                                    padding="15")
+        form_frame.grid(row=1, column=0, columnspan=2,
+                        sticky=(tk.W, tk.E), pady=(0, 15))
+
+        # Placa
+        ttk.Label(form_frame, text="Placa:",
+                  style='Subtitle.TLabel').grid(row=0, column=0,
+                                                sticky=tk.W, pady=5)
+        self.entry_placa = ttk.Entry(form_frame, width=30, font=('Arial', 10))
+        self.entry_placa.grid(row=0, column=1, padx=(10, 0), pady=5, sticky=tk.W)
+
+        # Marca
+        ttk.Label(form_frame, text="Marca:",
+                  style='Subtitle.TLabel').grid(row=1, column=0,
+                                                sticky=tk.W, pady=5)
+        self.entry_marca = ttk.Entry(form_frame, width=30, font=('Arial', 10))
+        self.entry_marca.grid(row=1, column=1, padx=(10, 0), pady=5, sticky=tk.W)
+
+        # Propietario
+        ttk.Label(form_frame, text="Propietario:",
+                  style='Subtitle.TLabel').grid(row=2, column=0,
+                                                sticky=tk.W, pady=5)
+        self.entry_propietario = ttk.Entry(form_frame, width=30, font=('Arial', 10))
+        self.entry_propietario.grid(row=2, column=1, padx=(10, 0), pady=5, sticky=tk.W)
+
+    def crear_botones(self, parent):
+        """Crea los botones de acción."""
+        button_frame = ttk.Frame(parent)
+        button_frame.grid(row=2, column=0, columnspan=2, pady=(0, 15))
+
+        # Botón Agregar
+        btn_agregar = ttk.Button(button_frame,
+                                 text="➕ Agregar Vehículo",
+                                 style='Action.TButton',
+                                 command=self.agregar_vehiculo)
+        btn_agregar.grid(row=0, column=0, padx=5)
+
+        # Botón Limpiar
+        btn_limpiar = ttk.Button(button_frame,
+                                 text="🗑️ Limpiar",
+                                 style='Action.TButton',
+                                 command=self.limpiar_campos)
+        btn_limpiar.grid(row=0, column=1, padx=5)
+
+    def crear_tabla_vehiculos(self, parent):
+        """Crea la tabla para mostrar los vehículos registrados."""
+        list_frame = ttk.LabelFrame(parent,
+                                    text="Vehículos Registrados",
+                                    padding="15")
+        list_frame.grid(row=3, column=0, columnspan=2,
+                        sticky=(tk.W, tk.E, tk.N, tk.S))
+
+        # Crear Treeview con scrollbar
+        columns = ('placa', 'marca', 'propietario')
+        self.tree = ttk.Treeview(list_frame, columns=columns,
+                                 show='headings', height=10)
+
+        # Definir encabezados
+        self.tree.heading('placa', text='Placa')
+        self.tree.heading('marca', text='Marca')
+        self.tree.heading('propietario', text='Propietario')
+
+        # Configurar columnas
+        self.tree.column('placa', width=150, anchor=tk.CENTER)
+        self.tree.column('marca', width=200, anchor=tk.CENTER)
+        self.tree.column('propietario', width=250, anchor=tk.CENTER)
+
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL,
+                                  command=self.tree.yview)
+        self.tree.configure(yscrollcommand=scrollbar.set)
+
+        # Grid
+        self.tree.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+
+    def agregar_vehiculo(self):
+        """Maneja el evento de agregar un vehículo."""
+        placa = self.entry_placa.get().strip()
+        marca = self.entry_marca.get().strip()
+        propietario = self.entry_propietario.get().strip()
+
+        # Validaciones
+        if not placa or not marca or not propietario:
+            messagebox.showwarning("Campos vacíos",
+                                   "Por favor, complete todos los campos.")
+            return
+
+        # Crear vehículo y agregarlo
+        vehiculo = Vehiculo(placa, marca, propietario)
+
+        if self.servicio.agregar_vehiculo(vehiculo):
+            # Agregar a la tabla
+            self.tree.insert('', tk.END,
+                             values=(vehiculo.placa,
+                                     vehiculo.marca,
+                                     vehiculo.propietario))
+
+            # Limpiar campos
+            self.limpiar_campos()
+
+            # Mensaje de éxito
+            messagebox.showinfo("Éxito",
+                                f"Vehículo {placa} registrado correctamente.")
+        else:
+            messagebox.showerror("Error",
+                                 f"La placa {placa} ya está registrada.")
+
+    def limpiar_campos(self):
+        """Limpia todos los campos del formulario."""
+        self.entry_placa.delete(0, tk.END)
+        self.entry_marca.delete(0, tk.END)
+        self.entry_propietario.delete(0, tk.END)
+        self.entry_placa.focus()
